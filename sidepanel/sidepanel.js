@@ -80,6 +80,7 @@ function activateTemplate(templateId) {
 
   // Rebuild the pill grid for this template.
   renderPillGrid(template.pills);
+  renderCanvas(template);
 }
 
 // ── Render Pill Grid ────────────────────────────────────────────────────────
@@ -114,6 +115,51 @@ function renderPillGrid(pills) {
     cell.appendChild(label);
     cell.appendChild(input);
     grid.appendChild(cell);
+  });
+}
+
+// ── Render Canvas ───────────────────────────────────────────────────────────
+// Converts the template's plain script_text into a live canvas with
+// styled pill token spans. Called every time a template is activated.
+function renderCanvas(template) {
+  const canvas = document.getElementById("script-canvas");
+  canvas.innerHTML = ""; // wipe whatever was there before
+
+  // Build a lookup map: label → key
+  // e.g. "Patient Name" → "patient_name"
+  // This is how we match "[Patient Name]" in the text to the right data-key.
+  const labelToKey = {};
+  template.pills.forEach((pill) => {
+    labelToKey[pill.label] = pill.key;
+  });
+
+  // Split script_text into alternating plain-text and [Token] parts.
+  const parts = template.script_text.split(/(\[[^\]]+\])/g);
+
+  parts.forEach((part) => {
+    const tokenMatch = part.match(/^\[([^\]]+)\]$/); // is this part a [Token]?
+
+    if (tokenMatch) {
+      const label = tokenMatch[1]; // e.g. "Patient Name"
+      const key = labelToKey[label]; // e.g. "patient_name"
+
+      if (key) {
+        // Known token → build a protected pill span.
+        const span = document.createElement("span");
+        span.className = "pill-token";
+        span.contentEditable = "false";
+        span.dataset.key = key;
+        span.textContent = `[${label}]`;
+        canvas.appendChild(span);
+      } else {
+        // Unknown token (no matching pill) → render as plain text.
+        // This prevents silent data loss if a script has a typo in a token name.
+        canvas.appendChild(document.createTextNode(part));
+      }
+    } else {
+      // Plain text — newlines are preserved by white-space: pre-wrap on .canvas-area.
+      canvas.appendChild(document.createTextNode(part));
+    }
   });
 }
 

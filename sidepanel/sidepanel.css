@@ -36,12 +36,9 @@
   --token-filled-bg: #d1fae5;
   --token-filled-fg: #065f46;
   --radius: 6px;
-  --font-ui: system-ui, sans-serif;
+  --font-ui: "Merriweather", Georgia, serif;
   --font-script: "Merriweather", Georgia, serif;
 }
-
-/* ── Google Font (loads from extension context) */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap");
 
 body {
   font-family: var(--font-ui);
