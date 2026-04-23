@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Script Tool</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <!-- ROW 1: Top Bar -->
+    <header class="top-bar">
+      <select id="mode-select" class="bar-control">
+        <option value="usage">Usage Mode</option>
+        <option value="editor">Template Editor</option>
+      </select>
+
+      <select id="template-select" class="bar-control">
+        <option>Loading templates…</option>
+      </select>
+
+      <button class="bar-icon" title="Settings">⚙</button>
+    </header>
+
+    <!-- ROW 2: Patient Name — this creates the session -->
+    <div class="patient-row">
+      <label class="patient-label" for="patient-name-input"
+        >Patient Full Name</label
+      >
+      <input
+        id="patient-name-input"
+        class="patient-input"
+        type="text"
+        placeholder="e.g. John Smith"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- ROW 2.5: Session status (shown once a patient name is entered) -->
+    <div class="session-bar" id="session-bar" style="display: none">
+      <span class="session-bar__label">Session:</span>
+      <span class="session-bar__id" id="session-id-display">—</span>
+    </div>
+
+    <!-- ROW 3: Pill Grid — fills in per template -->
+    <div class="pill-grid" id="pill-grid">
+      <!-- Injected by JS in Session 4 — placeholder for now -->
+      <!-- <div class="pill-cell">
+        <label class="pill-label">Doctor's Name</label>
+        <input class="pill-input" type="text" placeholder="e.g. Dr. Rivera" />
+      </div>
+      <div class="pill-cell">
+        <label class="pill-label">Device</label>
+        <input class="pill-input" type="text" placeholder="e.g. TENS Unit" />
+      </div>
+      <div class="pill-cell">
+        <label class="pill-label">Body Part</label>
+        <input class="pill-input" type="text" placeholder="e.g. lower back" />
+      </div>
+      <div class="pill-cell">
+        <label class="pill-label">Delivered Date</label>
+        <input class="pill-input" type="text" placeholder="e.g. June 12" />
+      </div> -->
+    </div>
+
+    <!-- ROW 4: Script Canvas — the main reading area -->
+    <div class="canvas-wrapper">
+      <div
+        id="script-canvas"
+        class="canvas-area"
+        contenteditable="true"
+        spellcheck="false"
+      >
+        Hi! This is Adam with Advanced Therapeutics! Am I speaking with
+        <span class="pill-token" contenteditable="false" data-key="patient_name"
+          >[Patient Name]</span
+        >? Hi,
+        <span
+          class="pill-token"
+          contenteditable="false"
+          data-key="patient_first_name"
+          >[Patient First Name]</span
+        >! I'm calling about the
+        <span class="pill-token" contenteditable="false" data-key="device"
+          >[Device]</span
+        >
+        for your
+        <span class="pill-token" contenteditable="false" data-key="body_part"
+          >[Body Part]</span
+        >
+        that Dr.
+        <span class="pill-token" contenteditable="false" data-key="doctors_name"
+          >[Doctor's Name]</span
+        >
+        prescribed.
+      </div>
+    </div>
+
+    <!-- ROW 5: Footer -->
+    <footer class="footer">
+      <button id="btn-save" class="btn btn--secondary">Save Session</button>
+      <button id="btn-download" class="btn btn--primary">
+        ⬇ Download .txt
+      </button>
+    </footer>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

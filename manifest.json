@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Advanced Therapeutics Script Tool",
+  "version": "0.1.0",
+  "description": "Call script assistant for outbound patient calls.",
+  "permissions": ["sidePanel", "storage"],
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background/service_worker.js"
+  },
+  "action": {
+    "default_title": "Open Script Tool"
+  }
+}

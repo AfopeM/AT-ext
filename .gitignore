@@ -1,0 +1,17 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# If you ever add a build step
+node_modules/
+dist/
+
+# Never commit real patient data exports or local test files
+*.txt
+test-data/
+
+templates.js

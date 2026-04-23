@@ -1,0 +1,272 @@
+/* ── Fonts (bundled — Google Fonts blocked by extension CSP) ── */
+@font-face {
+  font-family: "Merriweather";
+  src: url("../assets/fonts/Merriweather-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: url("../assets/fonts/Merriweather-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ── Reset ──────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design Tokens ──────────────────────────── */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --border: #dde1e7;
+  --text: #1a1d23;
+  --text-muted: #6b7280;
+  --accent: #1a6ef5;
+  --accent-soft: #dbeafe;
+  --token-bg: #fef3c7;
+  --token-fg: #92400e;
+  --token-filled-bg: #d1fae5;
+  --token-filled-fg: #065f46;
+  --radius: 6px;
+  --font-ui: system-ui, sans-serif;
+  --font-script: "Merriweather", Georgia, serif;
+}
+
+/* ── Google Font (loads from extension context) */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap");
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ────────────────────────────────── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.bar-control {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  appearance: auto;
+}
+
+.bar-icon {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ── Patient Row ────────────────────────────── */
+.patient-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.patient-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.patient-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  background: var(--bg);
+  transition: border-color 0.15s;
+}
+
+.patient-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+/* ── Pill Grid ──────────────────────────────── */
+.pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pill-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pill-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pill-input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  background: var(--bg);
+  transition: border-color 0.15s;
+}
+
+.pill-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+/* ── Canvas ─────────────────────────────────── */
+.canvas-wrapper {
+  flex: 1; /* takes all remaining vertical space */
+  overflow-y: auto;
+  padding: 16px 14px;
+  background: var(--bg);
+}
+
+.canvas-area {
+  font-family: var(--font-script);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  outline: none;
+  white-space: pre-wrap;
+  min-height: 100%;
+}
+
+/* ── Pill Tokens ────────────────────────────── */
+/* Unfilled: warm amber — stands out as "needs a value" */
+.pill-token {
+  display: inline-block;
+  background: var(--token-bg);
+  color: var(--token-fg);
+  border-radius: 4px;
+  padding: 0px 5px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+  user-select: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+/* Filled: green — instantly scannable during a live call */
+.pill-token.is-filled {
+  background: var(--token-filled-bg);
+  color: var(--token-filled-fg);
+}
+
+/* ── Footer ─────────────────────────────────── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 7px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn--secondary {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Session Bar ────────────────────────────── */
+.session-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #bbf7d0;
+  flex-shrink: 0;
+}
+
+.session-bar__label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #16a34a;
+}
+
+.session-bar__id {
+  font-size: 11px;
+  color: #15803d;
+  font-family: monospace;
+}
