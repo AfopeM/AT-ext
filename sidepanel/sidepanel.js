@@ -71,6 +71,7 @@ function activateTemplate(templateId) {
   // Update state.
   state.activeTemplateId = templateId;
   state.pillValues = {}; // clear any previously typed pill values
+  document.getElementById("patient-name-input").value = "";
 
   console.log("[Template] Activated:", template.name);
   console.log(
@@ -112,6 +113,10 @@ function renderPillGrid(pills) {
     input.placeholder = `e.g. ${getPlaceholderHint(pill.key)}`;
     input.autocomplete = "off";
 
+    input.addEventListener("input", (e) => {
+      updateTokens(pill.key, e.target.value);
+    });
+
     cell.appendChild(label);
     cell.appendChild(input);
     grid.appendChild(cell);
@@ -119,46 +124,62 @@ function renderPillGrid(pills) {
 }
 
 // ── Render Canvas ───────────────────────────────────────────────────────────
-// Converts the template's plain script_text into a live canvas with
-// styled pill token spans. Called every time a template is activated.
+// Converts the active template's plain-text script into HTML with pill token
+// spans. Called every time a template is activated. Wipes previous content.
 function renderCanvas(template) {
   const canvas = document.getElementById("script-canvas");
-  canvas.innerHTML = ""; // wipe whatever was there before
 
-  // Build a lookup map: label → key
-  // e.g. "Patient Name" → "patient_name"
-  // This is how we match "[Patient Name]" in the text to the right data-key.
+  // Build a lookup: lowercase label → pill key.
+  // e.g. "doctor's name" → "doctors_name"
   const labelToKey = {};
   template.pills.forEach((pill) => {
-    labelToKey[pill.label] = pill.key;
+    labelToKey[pill.label.toLowerCase()] = pill.key;
   });
 
-  // Split script_text into alternating plain-text and [Token] parts.
-  const parts = template.script_text.split(/(\[[^\]]+\])/g);
+  // Escape HTML special characters so the raw script text
+  // can't accidentally inject HTML tags.
+  const escaped = template.script_text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
-  parts.forEach((part) => {
-    const tokenMatch = part.match(/^\[([^\]]+)\]$/); // is this part a [Token]?
+  // Replace every [Label] with a pill token span.
+  // Unknown labels (like [Company Name]) stay as plain text.
+  const withTokens = escaped.replace(/\[([^\]]+)\]/g, (match, label) => {
+    const key = labelToKey[label.toLowerCase()];
+    if (key) {
+      return `<span class="pill-token" contenteditable="false" data-key="${key}">[${label}]</span>`;
+    }
+    return match; // not a known pill — leave it alone
+  });
 
-    if (tokenMatch) {
-      const label = tokenMatch[1]; // e.g. "Patient Name"
-      const key = labelToKey[label]; // e.g. "patient_name"
+  // Convert newline characters to <br> so the script's line
+  // breaks survive the jump into innerHTML.
+  canvas.innerHTML = withTokens.replace(/\n/g, "<br>");
+}
 
-      if (key) {
-        // Known token → build a protected pill span.
-        const span = document.createElement("span");
-        span.className = "pill-token";
-        span.contentEditable = "false";
-        span.dataset.key = key;
-        span.textContent = `[${label}]`;
-        canvas.appendChild(span);
-      } else {
-        // Unknown token (no matching pill) → render as plain text.
-        // This prevents silent data loss if a script has a typo in a token name.
-        canvas.appendChild(document.createTextNode(part));
-      }
+// ── Update Tokens ───────────────────────────────────────────────────────────
+// Called on every keystroke. Finds all canvas spans matching the key,
+// updates their text, and toggles the filled style.
+function updateTokens(key, value) {
+  // Save to state so Save Session can read it later.
+  state.pillValues[key] = value;
+
+  const canvas = document.getElementById("script-canvas");
+  const tokens = canvas.querySelectorAll(`[data-key="${key}"]`);
+
+  tokens.forEach((span) => {
+    if (value.trim() === "") {
+      // Input was cleared — restore the bracket label.
+      // Find the matching pill to get the original label text.
+      const template = state.templates[state.activeTemplateId];
+      const pill = template.pills.find((p) => p.key === key);
+      span.textContent = pill ? `[${pill.label}]` : `[${key}]`;
+      span.classList.remove("is-filled");
     } else {
-      // Plain text — newlines are preserved by white-space: pre-wrap on .canvas-area.
-      canvas.appendChild(document.createTextNode(part));
+      // Has a value — show it and go green.
+      span.textContent = value;
+      span.classList.add("is-filled");
     }
   });
 }
@@ -193,4 +214,11 @@ function bindTopBarEvents() {
     console.log("[Mode] Switched to:", e.target.value);
     // TODO Session 14: implement mode switching logic
   });
+
+  // Patient name input → drives patient_name token live.
+  document
+    .getElementById("patient-name-input")
+    .addEventListener("input", (e) => {
+      updateTokens("patient_name", e.target.value);
+    });
 }
