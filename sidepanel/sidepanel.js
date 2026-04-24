@@ -4,10 +4,10 @@
 const state = {
   templates: {},
   activeTemplateId: null,
-  pillValues: {}, // will hold { key: "typed value" } as user fills inputs
+  pillValues: {},
   patients: {},
   activePatiendId: null,
-  pendingPatient: null, // (holds patient data before first session saves it)
+  pendingPatient: null,
   sessions: {},
 };
 
@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindHubEvents();
   bindFolderEvents();
   bindBreadcrumbEvents();
+  bindFooterEvents();
   showView("hub");
 });
 
@@ -90,6 +91,89 @@ function renderHub() {
 function formatDate(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// ── Generate Session ID ─────────────────────────────────────────────────────
+// Format: patientId_templateId_unixTimestamp
+// Unique by construction — same patient + same template + same second is
+// astronomically unlikely, and the timestamp rules out cross-day collisions.
+function generateSessionId(patientId, templateId) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  return `${patientId}_${templateId}_${timestamp}`;
+}
+
+// ── Save Session ────────────────────────────────────────────────────────────
+// Writes patient (if pending) and session to chrome.storage.local.
+// Shows inline feedback, then routes to Folder View.
+function saveSession() {
+  const patientId = state.activePatientId;
+  const templateId = state.activeTemplateId;
+
+  // Guard: both must be set before saving.
+  if (!patientId || !templateId) {
+    console.error("[Save] Missing patientId or templateId — cannot save.");
+    return;
+  }
+
+  const sessionId = generateSessionId(patientId, templateId);
+  const canvasHtml = document.getElementById("script-canvas").innerHTML;
+  const now = new Date().toISOString();
+
+  // Build the session record.
+  const session = {
+    id: sessionId,
+    patient_id: patientId,
+    template_id: templateId,
+    pill_values: { ...state.pillValues },
+    canvas_html: canvasHtml,
+    last_saved: now,
+  };
+
+  // If this patient has never been saved, promote them now.
+  const isNewPatient = !!state.pendingPatient;
+  if (isNewPatient) {
+    state.patients[patientId] = state.pendingPatient;
+    state.pendingPatient = null;
+  }
+
+  // Add session to state.
+  state.sessions[sessionId] = session;
+
+  // Write both to storage in one atomic call.
+  // Only include patients in the write if a new one was just promoted.
+  const updates = { sessions: state.sessions };
+  if (isNewPatient) updates.patients = state.patients;
+
+  chrome.storage.local.set(updates, () => {
+    if (chrome.runtime.lastError) {
+      console.error("[Save] Storage write failed:", chrome.runtime.lastError);
+      return;
+    }
+
+    console.log("[Save] Session saved:", sessionId);
+    showSavedFeedback();
+
+    // Route back to Folder View after a short delay
+    // so the user sees the "Saved ✓" confirmation before navigating.
+    setTimeout(() => {
+      renderFolder();
+      showView("folder");
+    }, 800);
+  });
+}
+
+// ── Show Saved Feedback ─────────────────────────────────────────────────────
+// Temporarily changes the Save button label to "Saved ✓".
+// Resets automatically — no action needed from the user.
+function showSavedFeedback() {
+  const btn = document.getElementById("btn-save");
+  const original = btn.textContent;
+  btn.textContent = "Saved ✓";
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 800);
 }
 
 // ── Load Sessions from Storage ──────────────────────────────────────────────
@@ -362,6 +446,11 @@ function bindTopBarEvents() {
     .addEventListener("input", (e) => {
       updateTokens("patient_name", e.target.value);
     });
+}
+
+// ── Footer Event Bindings ───────────────────────────────────────────────────
+function bindFooterEvents() {
+  document.getElementById("btn-save").addEventListener("click", saveSession);
 }
 
 // ── Hub Event Bindings ──────────────────────────────────────────────────────
