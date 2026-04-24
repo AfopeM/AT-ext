@@ -336,3 +336,67 @@ body {
   color: var(--text-muted);
   text-align: center;
 }
+
+/* ── Folder View ────────────────────────────── */
+.folder-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.folder-header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 10px;
+}
+
+.folder-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.session-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.session-card:hover {
+  background: var(--accent-soft);
+}
+
+.session-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-card__template {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.session-card__date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.session-list__empty {
+  padding: 24px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}

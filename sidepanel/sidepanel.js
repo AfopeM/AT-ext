@@ -5,9 +5,10 @@ const state = {
   templates: {},
   activeTemplateId: null,
   pillValues: {}, // will hold { key: "typed value" } as user fills inputs
-  patients: {}, //
-  activePatiendId: null, //
+  patients: {},
+  activePatiendId: null,
   pendingPatient: null, // (holds patient data before first session saves it)
+  sessions: {},
 };
 
 // ── Boot ───────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPatients(() => renderHub());
   bindTopBarEvents();
   bindHubEvents();
+  bindFolderEvents();
   showView("hub");
 });
 
@@ -71,8 +73,11 @@ function renderHub() {
     card.addEventListener("click", () => {
       const patientId = card.dataset.patientId;
       state.activePatientId = patientId;
-      // Session 8 will route to Folder View here.
-      console.log("[Hub] Patient selected:", state.patients[patientId].name);
+
+      loadSessions(() => {
+        renderFolder();
+        showView("folder");
+      });
     });
   });
 }
@@ -82,6 +87,68 @@ function renderHub() {
 function formatDate(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// ── Load Sessions from Storage ──────────────────────────────────────────────
+// Reads once per folder open. Keeps state.sessions in sync.
+function loadSessions(callback) {
+  chrome.storage.local.get("sessions", (data) => {
+    state.sessions = data.sessions || {};
+    if (callback) callback();
+  });
+}
+
+// ── Render Folder ───────────────────────────────────────────────────────────
+// Shows all sessions belonging to the active patient, newest first.
+function renderFolder() {
+  const patientId = state.activePatientId;
+  const patient = state.patients[patientId] || state.pendingPatient;
+
+  // Update the folder title to the patient's name.
+  document.getElementById("folder-patient-name").textContent = patient
+    ? patient.name
+    : "Unknown Patient";
+
+  // Filter sessions to just this patient's.
+  const patientSessions = Object.values(state.sessions).filter(
+    (s) => s.patient_id === patientId,
+  );
+
+  const list = document.getElementById("session-list");
+
+  if (patientSessions.length === 0) {
+    list.innerHTML = `<div class="session-list__empty">No scripts yet. Hit "+ New Script" to start.</div>`;
+    return;
+  }
+
+  // Most recently saved first.
+  patientSessions.sort((a, b) => b.last_saved.localeCompare(a.last_saved));
+
+  list.innerHTML = patientSessions
+    .map((s) => {
+      const template = state.templates[s.template_id];
+      const templateName = template ? template.name : s.template_id;
+      return `
+      <div class="session-card" data-session-id="${s.id}">
+        <div class="session-card__left">
+          <span class="session-card__template">${templateName}</span>
+          <span class="session-card__date">Saved ${formatDate(s.last_saved)}</span>
+        </div>
+        <span style="color: var(--text-muted); font-size: 14px;">→</span>
+      </div>
+    `;
+    })
+    .join("");
+
+  // Wire click handlers — Session 11 will load the session.
+  // For now, just log so we can verify the card renders.
+  list.querySelectorAll(".session-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const sessionId = card.dataset.sessionId;
+      console.log("[Folder] Session selected:", sessionId);
+      // TODO Session 11: load session into workspace
+    });
+  });
 }
 
 // ── Load Templates from Storage ────────────────────────────────────────────
@@ -319,6 +386,22 @@ function bindHubEvents() {
     .addEventListener("keydown", (e) => {
       if (e.key === "Enter") confirmNewPatient();
     });
+}
+
+// ── Folder Event Bindings ───────────────────────────────────────────────────
+function bindFolderEvents() {
+  document.getElementById("btn-new-script").addEventListener("click", () => {
+    // Routes to Workspace so user picks a template and starts a fresh session.
+    // Patient name is already in state.activePatientId from when they clicked
+    // their card in the Hub.
+    const patient =
+      state.patients[state.activePatientId] || state.pendingPatient;
+    if (patient) {
+      document.getElementById("patient-name-input").value = patient.name;
+      updateTokens("patient_name", patient.name);
+    }
+    showView("workspace");
+  });
 }
 
 // ── Confirm New Patient ─────────────────────────────────────────────────────
