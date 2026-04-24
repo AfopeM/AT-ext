@@ -57,6 +57,7 @@ export function loadSession(sessionId) {
 
   state.activeTemplateId = session.template_id;
   state.activeSessionId = session.id;
+  state.activePatientId = session.patient_id;
   state.pillValues = { ...session.pill_values };
 
   document.getElementById("template-select").value = session.template_id;
