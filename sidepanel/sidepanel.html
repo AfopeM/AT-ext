@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
+    <!-- Breadcrumb — persistent across all views -->
+    <nav class="breadcrumb" id="breadcrumb">
+      <span class="breadcrumb__crumb" id="crumb-home">Home</span>
+      <span class="breadcrumb__sep" id="sep-patient" style="display: none"
+        >›</span
+      >
+      <span
+        class="breadcrumb__crumb"
+        id="crumb-patient"
+        style="display: none"
+      ></span>
+      <span class="breadcrumb__sep" id="sep-template" style="display: none"
+        >›</span
+      >
+      <span
+        class="breadcrumb__crumb"
+        id="crumb-template"
+        style="display: none"
+      ></span>
+    </nav>
+
     <!-- ROW 1: Top Bar -->
     <header class="top-bar" id="top-bar">
       <select id="mode-select" class="bar-control">

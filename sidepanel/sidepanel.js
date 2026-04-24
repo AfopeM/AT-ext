@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindTopBarEvents();
   bindHubEvents();
   bindFolderEvents();
+  bindBreadcrumbEvents();
   showView("hub");
 });
 
@@ -34,6 +35,8 @@ function showView(name) {
   // Top bar only belongs to workspace view.
   const topBar = document.getElementById("top-bar");
   if (topBar) topBar.style.display = name === "workspace" ? "flex" : "none";
+
+  updateBreadcrumb(name);
 }
 
 // ── Load Patients from Storage ──────────────────────────────────────────────
@@ -219,6 +222,7 @@ function activateTemplate(templateId) {
   // Rebuild the pill grid for this template.
   renderPillGrid(template.pills);
   renderCanvas(template);
+  updateBreadcrumb("workspace");
 }
 
 // ── Render Pill Grid ────────────────────────────────────────────────────────
@@ -404,6 +408,29 @@ function bindFolderEvents() {
   });
 }
 
+// ── Breadcrumb Event Bindings ───────────────────────────────────────────────
+function bindBreadcrumbEvents() {
+  // Home crumb → always goes back to Hub.
+  document.getElementById("crumb-home").addEventListener("click", () => {
+    if (!document.getElementById("crumb-home").classList.contains("is-link"))
+      return;
+    loadPatients(() => {
+      renderHub();
+      showView("hub");
+    });
+  });
+
+  // Patient crumb → goes back to that patient's Folder.
+  document.getElementById("crumb-patient").addEventListener("click", () => {
+    if (!document.getElementById("crumb-patient").classList.contains("is-link"))
+      return;
+    loadSessions(() => {
+      renderFolder();
+      showView("folder");
+    });
+  });
+}
+
 // ── Confirm New Patient ─────────────────────────────────────────────────────
 // Generates a patient ID, holds the record in state.pendingPatient,
 // and routes to the Workspace so the user picks a template.
@@ -442,4 +469,60 @@ function confirmNewPatient() {
 
   console.log("[Hub] Pending patient created:", state.pendingPatient);
   showView("workspace");
+}
+
+// ── Update Breadcrumb ───────────────────────────────────────────────────────
+// Rebuilds the breadcrumb to match the current view depth.
+// "home" → just Home
+// "folder" → Home (link) › Patient Name
+// "workspace" → Home (link) › Patient Name (link) › Template Name
+function updateBreadcrumb(view) {
+  const crumbHome = document.getElementById("crumb-home");
+  const crumbPatient = document.getElementById("crumb-patient");
+  const crumbTemplate = document.getElementById("crumb-template");
+  const sepPatient = document.getElementById("sep-patient");
+  const sepTemplate = document.getElementById("sep-template");
+
+  // Resolve patient name from state — covers both saved and pending patients.
+  const patient = state.patients[state.activePatientId] || state.pendingPatient;
+  const patientName = patient ? patient.name : "";
+
+  // Resolve template name from state.
+  const template = state.templates[state.activeTemplateId];
+  const templateName = template ? template.name : "";
+
+  // Reset all crumbs to baseline before rebuilding.
+  [crumbHome, crumbPatient, crumbTemplate].forEach((el) => {
+    el.className = "breadcrumb__crumb";
+  });
+
+  if (view === "hub") {
+    crumbHome.classList.add("is-current");
+    sepPatient.style.display = "none";
+    crumbPatient.style.display = "none";
+    sepTemplate.style.display = "none";
+    crumbTemplate.style.display = "none";
+  }
+
+  if (view === "folder") {
+    crumbHome.classList.add("is-link");
+    sepPatient.style.display = "inline";
+    crumbPatient.style.display = "inline";
+    crumbPatient.textContent = patientName;
+    crumbPatient.classList.add("is-current");
+    sepTemplate.style.display = "none";
+    crumbTemplate.style.display = "none";
+  }
+
+  if (view === "workspace") {
+    crumbHome.classList.add("is-link");
+    sepPatient.style.display = "inline";
+    crumbPatient.style.display = "inline";
+    crumbPatient.textContent = patientName;
+    crumbPatient.classList.add("is-link");
+    sepTemplate.style.display = "inline";
+    crumbTemplate.style.display = "inline";
+    crumbTemplate.textContent = templateName;
+    crumbTemplate.classList.add("is-current");
+  }
 }
