@@ -232,10 +232,63 @@ function renderFolder() {
   list.querySelectorAll(".session-card").forEach((card) => {
     card.addEventListener("click", () => {
       const sessionId = card.dataset.sessionId;
-      console.log("[Folder] Session selected:", sessionId);
-      // TODO Session 11: load session into workspace
+      loadSession(sessionId);
     });
   });
+}
+
+// ── Load Session ─────────────────────────────────────────────────────────────
+// Restores a saved session into the Workspace.
+// Called when a user clicks a session card in the Folder View.
+function loadSession(sessionId) {
+  const session = state.sessions[sessionId];
+
+  if (!session) {
+    console.error("[Session] Not found in state:", sessionId);
+    return;
+  }
+
+  const template = state.templates[session.template_id];
+
+  if (!template) {
+    console.error("[Session] Template missing for session:", sessionId);
+    return;
+  }
+
+  // 1. Update state — everything else reads from here.
+  state.activeTemplateId = session.template_id;
+  state.pillValues = { ...session.pill_values };
+
+  // 2. Sync the template dropdown to show the right template name.
+  document.getElementById("template-select").value = session.template_id;
+
+  // 3. Restore the patient name field.
+  const patient = state.patients[session.patient_id];
+  const patientName = patient
+    ? patient.name
+    : session.pill_values.patient_name || "";
+  document.getElementById("patient-name-input").value = patientName;
+
+  // 4. Rebuild the pill grid from the template's pill definitions.
+  //    This creates the correct inputs for this template.
+  renderPillGrid(template.pills);
+
+  // 5. Restore saved values into each pill input.
+  //    patient_name and patient_first_name have no grid input (handled above
+  //    and via canvas_html respectively), so the null check skips them safely.
+  Object.entries(session.pill_values).forEach(([key, value]) => {
+    const input = document.getElementById(`pill-${key}`);
+    if (input) input.value = value;
+  });
+
+  // 6. Restore the canvas from saved HTML.
+  //    This preserves any manual text edits the user made during the call.
+  document.getElementById("script-canvas").innerHTML = session.canvas_html;
+
+  // 7. Navigate to workspace and update the breadcrumb.
+  showView("workspace");
+
+  console.log("[Session] Loaded:", sessionId);
 }
 
 // ── Load Templates from Storage ────────────────────────────────────────────
