@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
+    <!-- VIEW: Workspace -->
     <!-- ROW 1: Top Bar -->
-    <header class="top-bar">
+    <header class="top-bar" id="top-bar">
       <select id="mode-select" class="bar-control">
         <option value="usage">Usage Mode</option>
         <option value="editor">Template Editor</option>
@@ -21,46 +22,86 @@
       <button class="bar-icon" title="Settings">⚙</button>
     </header>
 
-    <!-- ROW 2: Patient Name — this creates the session -->
-    <div class="patient-row">
-      <label class="patient-label" for="patient-name-input"
-        >Patient Full Name</label
-      >
-      <input
-        id="patient-name-input"
-        class="patient-input"
-        type="text"
-        placeholder="e.g. John Smith"
-        autocomplete="off"
-      />
+    <!-- VIEW: Hub -->
+    <div
+      id="view-hub"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    >
+      <div class="hub-header">
+        <span class="hub-title">Patients</span>
+        <button id="btn-new-patient" class="btn btn--primary">
+          + New Patient
+        </button>
+      </div>
+
+      <!-- Inline new patient form (hidden until + button clicked) -->
+      <div id="new-patient-form" class="new-patient-form" style="display: none">
+        <input
+          id="new-patient-name"
+          class="patient-input"
+          type="text"
+          placeholder="Full name — e.g. John Smith"
+          autocomplete="off"
+        />
+        <button id="btn-confirm-patient" class="btn btn--primary">
+          Confirm
+        </button>
+        <button id="btn-cancel-patient" class="btn btn--secondary">
+          Cancel
+        </button>
+      </div>
+
+      <!-- Patient list -->
+      <div id="patient-list" class="patient-list">
+        <!-- Injected by JS -->
+      </div>
     </div>
 
-    <!-- ROW 2.5: Session status (shown once a patient name is entered) -->
-    <div class="session-bar" id="session-bar" style="display: none">
-      <span class="session-bar__label">Session:</span>
-      <span class="session-bar__id" id="session-id-display">—</span>
+    <div
+      id="view-workspace"
+      style="display: none; flex-direction: column; flex: 1; overflow: hidden"
+    >
+      <!-- ROW 2: Patient Name — this creates the session -->
+      <div class="patient-row">
+        <label class="patient-label" for="patient-name-input"
+          >Patient Full Name</label
+        >
+        <input
+          id="patient-name-input"
+          class="patient-input"
+          type="text"
+          placeholder="e.g. John Smith"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- ROW 2.5: Session status (shown once a patient name is entered) -->
+      <div class="session-bar" id="session-bar" style="display: none">
+        <span class="session-bar__label">Session:</span>
+        <span class="session-bar__id" id="session-id-display">—</span>
+      </div>
+
+      <!-- ROW 3: Pill Grid — fills in per template -->
+      <div class="pill-grid" id="pill-grid"></div>
+
+      <!-- ROW 4: Script Canvas — the main reading area -->
+      <div class="canvas-wrapper">
+        <div
+          id="script-canvas"
+          class="canvas-area"
+          contenteditable="true"
+          spellcheck="false"
+        ></div>
+      </div>
+
+      <!-- ROW 5: Footer -->
+      <footer class="footer">
+        <button id="btn-save" class="btn btn--secondary">Save Session</button>
+        <button id="btn-download" class="btn btn--primary">
+          ⬇ Download .txt
+        </button>
+      </footer>
     </div>
-
-    <!-- ROW 3: Pill Grid — fills in per template -->
-    <div class="pill-grid" id="pill-grid"></div>
-
-    <!-- ROW 4: Script Canvas — the main reading area -->
-    <div class="canvas-wrapper">
-      <div
-        id="script-canvas"
-        class="canvas-area"
-        contenteditable="true"
-        spellcheck="false"
-      ></div>
-    </div>
-
-    <!-- ROW 5: Footer -->
-    <footer class="footer">
-      <button id="btn-save" class="btn btn--secondary">Save Session</button>
-      <button id="btn-download" class="btn btn--primary">
-        ⬇ Download .txt
-      </button>
-    </footer>
 
     <script src="sidepanel.js"></script>
   </body>

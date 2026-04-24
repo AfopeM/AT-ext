@@ -5,14 +5,84 @@ const state = {
   templates: {},
   activeTemplateId: null,
   pillValues: {}, // will hold { key: "typed value" } as user fills inputs
+  patients: {}, //
+  activePatiendId: null, //
+  pendingPatient: null, // (holds patient data before first session saves it)
 };
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 // Everything starts here. DOMContentLoaded fires once the HTML is parsed.
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates();
+  loadPatients(() => renderHub());
   bindTopBarEvents();
+  bindHubEvents();
+  showView("hub");
 });
+
+// ── View Switcher ───────────────────────────────────────────────────────────
+// Shows one view, hides the others. Pass "hub", "folder", or "workspace".
+function showView(name) {
+  const views = ["hub", "folder", "workspace"];
+  views.forEach((v) => {
+    const el = document.getElementById(`view-${v}`);
+    if (el) el.style.display = v === name ? "flex" : "none";
+  });
+
+  // Top bar only belongs to workspace view.
+  const topBar = document.getElementById("top-bar");
+  if (topBar) topBar.style.display = name === "workspace" ? "flex" : "none";
+}
+
+// ── Load Patients from Storage ──────────────────────────────────────────────
+function loadPatients(callback) {
+  chrome.storage.local.get("patients", (data) => {
+    state.patients = data.patients || {};
+    if (callback) callback();
+  });
+}
+
+// ── Render Hub ──────────────────────────────────────────────────────────────
+function renderHub() {
+  const list = document.getElementById("patient-list");
+  const patients = Object.values(state.patients);
+
+  if (patients.length === 0) {
+    list.innerHTML = `<div class="patient-list__empty">No patients yet. Hit "+ New Patient" to start.</div>`;
+    return;
+  }
+
+  // Most recently created first.
+  patients.sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  list.innerHTML = patients
+    .map(
+      (p) => `
+    <div class="patient-card" data-patient-id="${p.id}">
+      <span class="patient-card__name">${p.name}</span>
+      <span class="patient-card__date">${formatDate(p.created_at)}</span>
+    </div>
+  `,
+    )
+    .join("");
+
+  // Wire click handlers after rendering.
+  list.querySelectorAll(".patient-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const patientId = card.dataset.patientId;
+      state.activePatientId = patientId;
+      // Session 8 will route to Folder View here.
+      console.log("[Hub] Patient selected:", state.patients[patientId].name);
+    });
+  });
+}
+
+// ── Format Date ─────────────────────────────────────────────────────────────
+// Turns ISO string into "Jul 14" for display in patient cards.
+function formatDate(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 // ── Load Templates from Storage ────────────────────────────────────────────
 // Reads once on boot. All subsequent reads come from state.templates.
@@ -221,4 +291,72 @@ function bindTopBarEvents() {
     .addEventListener("input", (e) => {
       updateTokens("patient_name", e.target.value);
     });
+}
+
+// ── Hub Event Bindings ──────────────────────────────────────────────────────
+function bindHubEvents() {
+  document.getElementById("btn-new-patient").addEventListener("click", () => {
+    document.getElementById("new-patient-form").style.display = "flex";
+    document.getElementById("new-patient-name").focus();
+  });
+
+  document
+    .getElementById("btn-cancel-patient")
+    .addEventListener("click", () => {
+      document.getElementById("new-patient-form").style.display = "none";
+      document.getElementById("new-patient-name").value = "";
+    });
+
+  document
+    .getElementById("btn-confirm-patient")
+    .addEventListener("click", () => {
+      confirmNewPatient();
+    });
+
+  // Also confirm on Enter key.
+  document
+    .getElementById("new-patient-name")
+    .addEventListener("keydown", (e) => {
+      if (e.key === "Enter") confirmNewPatient();
+    });
+}
+
+// ── Confirm New Patient ─────────────────────────────────────────────────────
+// Generates a patient ID, holds the record in state.pendingPatient,
+// and routes to the Workspace so the user picks a template.
+// The patient is NOT written to storage yet — that happens in Session 10 on Save.
+function confirmNewPatient() {
+  const nameInput = document.getElementById("new-patient-name");
+  const name = nameInput.value.trim();
+
+  if (!name) {
+    nameInput.focus();
+    return;
+  }
+
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+  const timestamp = Math.floor(Date.now() / 1000);
+  const patientId = `${slug}_${timestamp}`;
+
+  // Hold in state — not saved to storage yet.
+  state.pendingPatient = {
+    id: patientId,
+    name: name,
+    created_at: new Date().toISOString(),
+  };
+  state.activePatientId = patientId;
+
+  // Reset the form.
+  nameInput.value = "";
+  document.getElementById("new-patient-form").style.display = "none";
+
+  // Pre-fill patient name pill and go to workspace.
+  document.getElementById("patient-name-input").value = name;
+  updateTokens("patient_name", name);
+
+  console.log("[Hub] Pending patient created:", state.pendingPatient);
+  showView("workspace");
 }
