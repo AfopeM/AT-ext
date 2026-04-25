@@ -1,13 +1,18 @@
-import { state } from "./state.js";
-import { showView } from "./views.js";
-import { updateTokens } from "./canvas.js"; // We'll need this for the auto-fill logic
-import { loadSessions } from "./storage.js";
-import { renderFolder } from "./folder.js";
+import {
+  getPatients,
+  getPendingPatient,
+  setActivePatientId,
+  setPendingPatient,
+} from "../../shared/state.js";
+import { showView } from "../../shared/views.js";
+import { updateTokens } from "../workspace/canvas.js"; // used for auto-fill logic
+import { loadSessions } from "../../shared/storage.js";
+import { renderFolder } from "../folder/folder.js";
 
 // ── Render Hub ──
 export function renderHub() {
   const list = document.getElementById("patient-list");
-  const patients = Object.values(state.patients);
+  const patients = Object.values(getPatients());
 
   if (patients.length === 0) {
     list.innerHTML = `<div class="patient-list__empty">No patients yet. Hit "+ New Patient" to start.</div>`;
@@ -29,7 +34,7 @@ export function renderHub() {
 
   list.querySelectorAll(".patient-card").forEach((card) => {
     card.addEventListener("click", () => {
-      state.activePatientId = card.dataset.patientId;
+      setActivePatientId(card.dataset.patientId);
       loadSessions(() => {
         renderFolder();
         showView("folder");
@@ -55,12 +60,12 @@ export function confirmNewPatient() {
   const timestamp = Math.floor(Date.now() / 1000);
   const patientId = `${slug}_${timestamp}`;
 
-  state.pendingPatient = {
+  setPendingPatient({
     id: patientId,
     name: name,
     created_at: new Date().toISOString(),
-  };
-  state.activePatientId = patientId;
+  });
+  setActivePatientId(patientId);
 
   nameInput.value = "";
   document.getElementById("new-patient-form").style.display = "none";

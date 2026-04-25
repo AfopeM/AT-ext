@@ -1,7 +1,13 @@
-import { state } from "./state.js";
 import { loadPatients, loadSessions } from "./storage.js";
-import { renderHub } from "./hub.js";
-import { renderFolder } from "./folder.js";
+import {
+  getActivePatientId,
+  getActiveTemplateId,
+  getPatients,
+  getPendingPatient,
+  getTemplates,
+} from "./state.js";
+import { renderHub } from "../features/hub/hub.js";
+import { renderFolder } from "../features/folder/folder.js";
 
 export function showView(name) {
   const views = ["hub", "folder", "workspace"];
@@ -23,10 +29,14 @@ export function updateBreadcrumb(view) {
   const sepPatient = document.getElementById("sep-patient");
   const sepTemplate = document.getElementById("sep-template");
 
-  const patient = state.patients[state.activePatientId] || state.pendingPatient;
+  const patients = getPatients();
+  const patientId = getActivePatientId();
+  const patient = patients[patientId] || getPendingPatient();
   const patientName = patient ? patient.name : "";
 
-  const template = state.templates[state.activeTemplateId];
+  const templates = getTemplates();
+  const templateId = getActiveTemplateId();
+  const template = templates[templateId];
   const templateName = template ? template.name : "";
 
   [crumbHome, crumbPatient, crumbTemplate].forEach((el) => {

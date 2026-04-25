@@ -1,8 +1,30 @@
-import { state } from "./state.js";
-import { showConfirmStrip } from "./ui.js";
-import { saveToStorage } from "./storage.js";
-import { showView } from "./views.js";
-import { renderFolder } from "./folder.js";
+import {
+  deleteSession,
+  getActivePatientId,
+  getActiveSessionId,
+  getActiveTemplateId,
+  getPatient,
+  getPillValues,
+  getSession,
+  getSessions,
+  getTemplate,
+  getTemplates,
+  getPendingPatient,
+  getPatients,
+  setActivePatientId,
+  setActiveSessionId,
+  setActiveTemplateId,
+  setPatients,
+  setPendingPatient,
+  setPillValue,
+  setPillValues,
+  setSession,
+  setSessions,
+} from "../../shared/state.js";
+import { showConfirmStrip } from "../../shared/ui.js";
+import { saveToStorage } from "../../shared/storage.js";
+import { showView } from "../../shared/views.js";
+import { renderFolder } from "../folder/folder.js";
 import { renderPillGrid } from "./workspace.js";
 
 // ── Render Canvas ──
@@ -31,13 +53,13 @@ export function renderCanvas(template) {
 
 // ── Update Tokens ──
 export function updateTokens(key, value) {
-  state.pillValues[key] = value;
+  setPillValue(key, value);
   const canvas = document.getElementById("script-canvas");
   const tokens = canvas.querySelectorAll(`[data-key="${key}"]`);
 
   tokens.forEach((span) => {
     if (value.trim() === "") {
-      const template = state.templates[state.activeTemplateId];
+      const template = getTemplate(getActiveTemplateId());
       const pill = template.pills.find((p) => p.key === key);
       span.textContent = pill ? `[${pill.label}]` : `[${key}]`;
       span.classList.remove("is-filled");
@@ -50,21 +72,21 @@ export function updateTokens(key, value) {
 
 // ── Load Session ──
 export function loadSession(sessionId) {
-  const session = state.sessions[sessionId];
+  const session = getSession(sessionId);
   if (!session) return;
 
-  const template = state.templates[session.template_id];
+  const template = getTemplate(session.template_id);
   if (!template) return;
 
-  state.activeTemplateId = session.template_id;
-  state.activeSessionId = session.id;
-  state.activePatientId = session.patient_id;
-  state.pillValues = { ...session.pill_values };
+  setActiveTemplateId(session.template_id);
+  setActiveSessionId(session.id);
+  setActivePatientId(session.patient_id);
+  setPillValues({ ...session.pill_values });
 
   document.getElementById("template-select").value = session.template_id;
   document.getElementById("template-select").disabled = true;
 
-  const patient = state.patients[session.patient_id];
+  const patient = getPatient(session.patient_id);
   document.getElementById("patient-name-input").value = patient
     ? patient.name
     : "";
@@ -84,13 +106,13 @@ export function loadSession(sessionId) {
 
 // ── Save Session ──
 export function saveSession() {
-  const patientId = state.activePatientId;
-  const templateId = state.activeTemplateId;
+  const patientId = getActivePatientId();
+  const templateId = getActiveTemplateId();
 
   if (!patientId || !templateId) return;
 
   const sessionId =
-    state.activeSessionId || generateSessionId(patientId, templateId);
+    getActiveSessionId() || generateSessionId(patientId, templateId);
   const canvasHtml = document.getElementById("script-canvas").innerHTML;
   const now = new Date().toISOString();
 
@@ -98,24 +120,26 @@ export function saveSession() {
     id: sessionId,
     patient_id: patientId,
     template_id: templateId,
-    pill_values: { ...state.pillValues },
+    pill_values: { ...getPillValues() },
     canvas_html: canvasHtml,
     last_saved: now,
   };
 
-  const isNewPatient = !!state.pendingPatient;
+  const isNewPatient = !!getPendingPatient();
   if (isNewPatient) {
-    state.patients[patientId] = state.pendingPatient;
-    state.pendingPatient = null;
+    const patients = getPatients();
+    patients[patientId] = getPendingPatient();
+    setPatients(patients);
+    setPendingPatient(null);
   }
 
-  state.sessions[sessionId] = session;
+  setSession(sessionId, session);
 
-  const updates = { sessions: state.sessions };
-  if (isNewPatient) updates.patients = state.patients;
+  const updates = { sessions: getSessions() };
+  if (isNewPatient) updates.patients = getPatients();
 
   saveToStorage(updates, () => {
-    state.activeSessionId = sessionId;
+    setActiveSessionId(sessionId);
     showSavedFeedback();
   });
 }
@@ -137,20 +161,19 @@ function showSavedFeedback() {
 }
 
 // ── Delete Session ───────────────────────────────────────────────────────────
-export function deleteSession() {
-  const sessionId = state.activeSessionId;
+export function handleDeleteSession() {
+  const sessionId = getActiveSessionId();
   if (!sessionId) return;
 
   showConfirmStrip(
     "session-confirm-strip",
     "Delete this session? This cannot be undone.",
     () => {
-      // Remove from state
-      delete state.sessions[sessionId];
+      deleteSession(sessionId);
 
       // Write to storage, then navigate to folder
-      saveToStorage({ sessions: state.sessions }, () => {
-        state.activeSessionId = null;
+      saveToStorage({ sessions: getSessions() }, () => {
+        setActiveSessionId(null);
         document.getElementById("btn-delete-session").style.display = "none";
         renderFolder();
         showView("folder");
@@ -163,5 +186,5 @@ export function deleteSession() {
 export function bindDeleteSessionEvent() {
   document
     .getElementById("btn-delete-session")
-    .addEventListener("click", deleteSession);
+    .addEventListener("click", handleDeleteSession);
 }

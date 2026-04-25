@@ -1,9 +1,21 @@
-import { state } from "./state.js";
-import { renderCanvas } from "./canvas.js";
-import { renderPillGrid } from "./workspace.js";
-import { saveToStorage } from "./storage.js";
-import { DEFAULT_TEMPLATES } from "../../defaults/templates.js";
-import { showConfirmStrip, showNameConfirmStrip, showInfoStrip } from "./ui.js";
+import {
+  deleteTemplate as deleteTemplateFromState,
+  getActiveTemplateId,
+  getTemplate,
+  getTemplates,
+  setActiveTemplateId,
+  setTemplate,
+  setTemplates,
+} from "../../shared/state.js";
+import { renderCanvas } from "../workspace/canvas.js";
+import { renderPillGrid } from "../workspace/workspace.js";
+import { saveToStorage } from "../../shared/storage.js";
+import { DEFAULT_TEMPLATES } from "../../../defaults/templates.js";
+import {
+  showConfirmStrip,
+  showInfoStrip,
+  showNameConfirmStrip,
+} from "../../shared/ui.js";
 
 // ── Working State ────────────────────────────────────────────────────────────
 // workingPills is a LOCAL copy of the template's pills array.
@@ -15,7 +27,7 @@ let workingPills = [];
 
 // ── Enter Editor Mode ────────────────────────────────────────────────────────
 export function enterEditorMode() {
-  const template = state.templates[state.activeTemplateId];
+  const template = getTemplate(getActiveTemplateId());
   if (!template) return;
 
   // Deep-copy so edits don't bleed into state until Save is clicked
@@ -41,7 +53,7 @@ export function enterEditorMode() {
 // ── Exit Editor Mode ─────────────────────────────────────────────────────────
 // Discards workingPills. Re-renders canvas from the SAVED template state.
 export function exitEditorMode() {
-  const template = state.templates[state.activeTemplateId];
+  const template = getTemplate(getActiveTemplateId());
   if (!template) return;
 
   workingPills = [];
@@ -186,21 +198,21 @@ function confirmAddPill(label, key) {
 // Reads canvas text + workingPills, updates state, writes to storage.
 // Default templates show a warning strip before committing.
 export function saveTemplate() {
-  const templateId = state.activeTemplateId;
-  const template = state.templates[templateId];
+  const templateId = getActiveTemplateId();
+  const template = getTemplate(templateId);
   if (!template) return;
 
   const newScriptText = document.getElementById("script-canvas").textContent;
 
   const doSave = () => {
     // Commit workingPills and new script text into state
-    state.templates[templateId] = {
+    setTemplate(templateId, {
       ...template,
       pills: workingPills,
       script_text: newScriptText,
-    };
+    });
 
-    saveToStorage({ templates: state.templates }, () => {
+    saveToStorage({ templates: getTemplates() }, () => {
       showSaveTemplateFeedback();
     });
   };
@@ -234,8 +246,8 @@ function showSaveTemplateFeedback() {
 // Reads from the hardcoded DEFAULT_TEMPLATES const — never from storage.
 // This is exactly why defaults live in a JS file and not only in storage.
 export function resetToDefault() {
-  const templateId = state.activeTemplateId;
-  const template = state.templates[templateId];
+  const templateId = getActiveTemplateId();
+  const template = getTemplate(templateId);
   if (!template || !template.isDefault) return;
 
   const defaultTemplate = DEFAULT_TEMPLATES[templateId];
@@ -246,10 +258,10 @@ export function resetToDefault() {
     `Reset "${template.name}" to its original content? All custom edits will be lost.`,
     () => {
       // Restore from hardcoded source — deep copy to avoid mutating the const
-      state.templates[templateId] = {
+      setTemplate(templateId, {
         ...defaultTemplate,
         pills: defaultTemplate.pills.map((p) => ({ ...p })),
-      };
+      });
 
       workingPills = defaultTemplate.pills.map((p) => ({ ...p }));
 
@@ -258,7 +270,7 @@ export function resetToDefault() {
 
       renderPillManager(workingPills);
 
-      saveToStorage({ templates: state.templates }, () => {
+      saveToStorage({ templates: getTemplates() }, () => {
         const btn = document.getElementById("btn-reset-default");
         const original = btn.textContent;
         btn.textContent = "Reset ✓";
@@ -277,12 +289,13 @@ export function resetToDefault() {
 // Non-defaults: single confirm strip.
 // Defaults: name-confirmation — user must type the template name to proceed.
 export function deleteTemplate() {
-  const templateId = state.activeTemplateId;
-  const template = state.templates[templateId];
+  const templateId = getActiveTemplateId();
+  const templates = getTemplates();
+  const template = templates[templateId];
   if (!template) return;
 
   // Guard: never delete the last template — there'd be nothing to show
-  if (Object.keys(state.templates).length <= 1) {
+  if (Object.keys(templates).length <= 1) {
     showInfoStrip(
       "template-confirm-strip",
       "Can't delete the last template. Create another one first.",
@@ -291,13 +304,14 @@ export function deleteTemplate() {
   }
 
   const doDelete = () => {
-    delete state.templates[templateId];
+    delete templates[templateId];
+    deleteTemplateFromState(templateId);
 
-    saveToStorage({ templates: state.templates }, () => {
+    saveToStorage({ templates }, () => {
       // Rebuild the dropdown without a circular import
       const select = document.getElementById("template-select");
       select.innerHTML = "";
-      Object.values(state.templates).forEach((t) => {
+      Object.values(templates).forEach((t) => {
         const opt = document.createElement("option");
         opt.value = t.id;
         opt.textContent = t.name;
@@ -306,8 +320,8 @@ export function deleteTemplate() {
 
       // Switch to the first remaining template and return to usage mode
       if (select.options.length > 0) {
-        state.activeTemplateId = select.options[0].value;
-        select.value = state.activeTemplateId;
+        setActiveTemplateId(select.options[0].value);
+        select.value = getActiveTemplateId();
         document.getElementById("mode-select").value = "usage";
         exitEditorMode();
       }

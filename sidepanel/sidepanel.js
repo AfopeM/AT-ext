@@ -1,18 +1,18 @@
-import { downloadRtf } from "./modules/export.js";
-import { loadTemplates, loadPatients } from "./modules/storage.js";
-import { showView, bindBreadcrumbEvents } from "./modules/views.js";
-import { renderHub, bindHubEvents } from "./modules/hub.js";
-import { renderFolder, bindFolderEvents } from "./modules/folder.js";
-import { saveSession, bindDeleteSessionEvent } from "./modules/canvas.js";
+import { downloadRtf } from "./features/workspace/export.js";
+import { loadTemplates, loadPatients } from "./shared/storage.js";
+import { showView, bindBreadcrumbEvents } from "./shared/views.js";
+import { renderHub, bindHubEvents } from "./features/hub/hub.js";
+import { renderFolder, bindFolderEvents } from "./features/folder/folder.js";
+import { saveSession, bindDeleteSessionEvent } from "./features/workspace/canvas.js";
 import {
   populateTemplateDropdown,
   bindTopBarEvents,
-} from "./modules/workspace.js";
+} from "./features/workspace/workspace.js";
 import {
   saveTemplate,
   resetToDefault,
   deleteTemplate,
-} from "./modules/templateEditor.js";
+} from "./features/editor/templateEditor.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {

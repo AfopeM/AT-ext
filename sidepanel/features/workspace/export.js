@@ -1,4 +1,10 @@
-import { state } from "./state.js";
+import {
+  getActivePatientId,
+  getActiveTemplateId,
+  getPatient,
+  getPendingPatient,
+  getTemplate,
+} from "../../shared/state.js";
 
 // ── Canvas Parser ────────────────────────────────────────────────────────────
 // Walks the canvas DOM and returns lines → segments.
@@ -91,8 +97,10 @@ function buildRtf(lines) {
 
 // ── Filename Builder ─────────────────────────────────────────────────────────
 function buildFilename() {
-  const patient = state.patients[state.activePatientId] || state.pendingPatient;
-  const template = state.templates[state.activeTemplateId];
+  const patientId = getActivePatientId();
+  const templateId = getActiveTemplateId();
+  const patient = getPatient(patientId) || getPendingPatient();
+  const template = getTemplate(templateId);
   const patientName = patient ? patient.name.replace(/\s+/g, "_") : "Patient";
   const templateName = template ? template.name.replace(/\s+/g, "_") : "Script";
   const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD

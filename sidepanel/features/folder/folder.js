@@ -1,20 +1,32 @@
-import { state } from "./state.js";
-import { showView } from "./views.js";
-import { saveToStorage, loadPatients } from "./storage.js";
-import { renderHub } from "./hub.js";
-import { showConfirmStrip } from "./ui.js";
-import { loadSession, updateTokens } from "./canvas.js";
+import {
+  deletePatient as deletePatientFromState,
+  getActivePatientId,
+  getPatients,
+  getPendingPatient,
+  getSessions,
+  getTemplates,
+  setActivePatientId,
+  setActiveSessionId,
+} from "../../shared/state.js";
+import { showView } from "../../shared/views.js";
+import { saveToStorage, loadPatients } from "../../shared/storage.js";
+import { renderHub } from "../hub/hub.js";
+import { showConfirmStrip } from "../../shared/ui.js";
+import { loadSession, updateTokens } from "../workspace/canvas.js";
 
 // ── Render Folder ──
 export function renderFolder() {
-  const patientId = state.activePatientId;
-  const patient = state.patients[patientId] || state.pendingPatient;
+  const patientId = getActivePatientId();
+  const patients = getPatients();
+  const patient = patients[patientId] || getPendingPatient();
 
   document.getElementById("folder-patient-name").textContent = patient
     ? patient.name
     : "Unknown Patient";
 
-  const patientSessions = Object.values(state.sessions).filter(
+  const sessions = getSessions();
+  const templates = getTemplates();
+  const patientSessions = Object.values(sessions).filter(
     (s) => s.patient_id === patientId,
   );
 
@@ -29,7 +41,7 @@ export function renderFolder() {
 
   list.innerHTML = patientSessions
     .map((s) => {
-      const template = state.templates[s.template_id];
+      const template = templates[s.template_id];
       const templateName = template ? template.name : s.template_id;
       return `
       <div class="session-card" data-session-id="${s.id}">
@@ -54,7 +66,7 @@ export function renderFolder() {
 export function bindFolderEvents() {
   document.getElementById("btn-new-script").addEventListener("click", () => {
     const patient =
-      state.patients[state.activePatientId] || state.pendingPatient;
+      getPatients()[getActivePatientId()] || getPendingPatient();
     if (patient) {
       document.getElementById("patient-name-input").value = patient.name;
       updateTokens("patient_name", patient.name);
@@ -77,10 +89,12 @@ function formatDate(isoString) {
 
 // ── Delete Patient ───────────────────────────────────────────────────────────
 function deletePatient() {
-  const patientId = state.activePatientId;
+  const patientId = getActivePatientId();
   if (!patientId) return;
 
-  const patient = state.patients[patientId];
+  const patients = getPatients();
+  const sessions = getSessions();
+  const patient = patients[patientId];
   const name = patient ? patient.name : "this patient";
 
   showConfirmStrip(
@@ -88,21 +102,22 @@ function deletePatient() {
     `Delete ${name} and all their scripts? This cannot be undone.`,
     () => {
       // Sweep all sessions belonging to this patient first
-      Object.keys(state.sessions).forEach((id) => {
-        if (state.sessions[id].patient_id === patientId) {
-          delete state.sessions[id];
+      Object.keys(sessions).forEach((id) => {
+        if (sessions[id].patient_id === patientId) {
+          delete sessions[id];
         }
       });
 
       // Remove the patient record
-      delete state.patients[patientId];
+      delete patients[patientId];
+      deletePatientFromState(patientId);
 
       // Write both to storage, then navigate to hub
       saveToStorage(
-        { sessions: state.sessions, patients: state.patients },
+        { sessions, patients },
         () => {
-          state.activePatientId = null;
-          state.activeSessionId = null;
+          setActivePatientId(null);
+          setActiveSessionId(null);
           loadPatients(() => {
             renderHub();
             showView("hub");

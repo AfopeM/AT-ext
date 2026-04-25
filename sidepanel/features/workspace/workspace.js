@@ -1,14 +1,20 @@
-import { state } from "./state.js";
-import { updateBreadcrumb } from "./views.js";
+import {
+  getTemplate,
+  getTemplates,
+  setActiveSessionId,
+  setActiveTemplateId,
+  setPillValues,
+} from "../../shared/state.js";
+import { updateBreadcrumb } from "../../shared/views.js";
 import { renderCanvas, updateTokens } from "./canvas.js";
-import { enterEditorMode, exitEditorMode } from "./templateEditor.js";
+import { enterEditorMode, exitEditorMode } from "../editor/templateEditor.js";
 
 // ── Populate Template Dropdown ──
 export function populateTemplateDropdown() {
   const select = document.getElementById("template-select");
   select.innerHTML = "";
 
-  Object.values(state.templates).forEach((template) => {
+  Object.values(getTemplates()).forEach((template) => {
     const option = document.createElement("option");
     option.value = template.id;
     option.textContent = template.name;
@@ -22,17 +28,17 @@ export function populateTemplateDropdown() {
 
 // ── Activate a Template ──
 export function activateTemplate(templateId) {
-  const template = state.templates[templateId];
+  const template = getTemplate(templateId);
 
   if (!template) {
     console.error("[Template] Not found in state:", templateId);
     return;
   }
 
-  state.activeTemplateId = templateId;
-  state.activeSessionId = null;
+  setActiveTemplateId(templateId);
+  setActiveSessionId(null);
   document.getElementById("template-select").disabled = false;
-  state.pillValues = {};
+  setPillValues({});
   document.getElementById("patient-name-input").value = "";
   document.getElementById("btn-delete-session").style.display = "none";
 

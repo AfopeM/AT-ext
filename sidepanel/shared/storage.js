@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { setPatients, setSessions, setTemplates } from "./state.js";
 
 // ── Load Templates ──
 export function loadTemplates(callback) {
@@ -7,7 +7,7 @@ export function loadTemplates(callback) {
       console.error("[Storage] Read error:", chrome.runtime.lastError);
       return;
     }
-    state.templates = data.templates || {};
+    setTemplates(data.templates || {});
     if (callback) callback();
   });
 }
@@ -15,7 +15,7 @@ export function loadTemplates(callback) {
 // ── Load Patients ──
 export function loadPatients(callback) {
   chrome.storage.local.get("patients", (data) => {
-    state.patients = data.patients || {};
+    setPatients(data.patients || {});
     if (callback) callback();
   });
 }
@@ -23,7 +23,7 @@ export function loadPatients(callback) {
 // ── Load Sessions ──
 export function loadSessions(callback) {
   chrome.storage.local.get("sessions", (data) => {
-    state.sessions = data.sessions || {};
+    setSessions(data.sessions || {});
     if (callback) callback();
   });
 }
