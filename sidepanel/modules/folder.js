@@ -1,5 +1,8 @@
 import { state } from "./state.js";
 import { showView } from "./views.js";
+import { saveToStorage, loadPatients } from "./storage.js";
+import { renderHub } from "./hub.js";
+import { showConfirmStrip } from "./ui.js";
 import { loadSession, updateTokens } from "./canvas.js";
 
 // ── Render Folder ──
@@ -58,6 +61,10 @@ export function bindFolderEvents() {
     }
     showView("workspace");
   });
+
+  document
+    .getElementById("btn-delete-patient")
+    .addEventListener("click", deletePatient);
 }
 
 // ── Helper ──
@@ -66,4 +73,42 @@ export function bindFolderEvents() {
 function formatDate(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// ── Delete Patient ───────────────────────────────────────────────────────────
+function deletePatient() {
+  const patientId = state.activePatientId;
+  if (!patientId) return;
+
+  const patient = state.patients[patientId];
+  const name = patient ? patient.name : "this patient";
+
+  showConfirmStrip(
+    "patient-confirm-strip",
+    `Delete ${name} and all their scripts? This cannot be undone.`,
+    () => {
+      // Sweep all sessions belonging to this patient first
+      Object.keys(state.sessions).forEach((id) => {
+        if (state.sessions[id].patient_id === patientId) {
+          delete state.sessions[id];
+        }
+      });
+
+      // Remove the patient record
+      delete state.patients[patientId];
+
+      // Write both to storage, then navigate to hub
+      saveToStorage(
+        { sessions: state.sessions, patients: state.patients },
+        () => {
+          state.activePatientId = null;
+          state.activeSessionId = null;
+          loadPatients(() => {
+            renderHub();
+            showView("hub");
+          });
+        },
+      );
+    },
+  );
 }

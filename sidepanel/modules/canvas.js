@@ -1,4 +1,5 @@
 import { state } from "./state.js";
+import { showConfirmStrip } from "./ui.js";
 import { saveToStorage } from "./storage.js";
 import { showView } from "./views.js";
 import { renderFolder } from "./folder.js";
@@ -76,6 +77,8 @@ export function loadSession(sessionId) {
   });
 
   document.getElementById("script-canvas").innerHTML = session.canvas_html;
+  document.getElementById("btn-delete-session").style.display = "inline-block";
+
   showView("workspace");
 }
 
@@ -131,4 +134,34 @@ function showSavedFeedback() {
     btn.textContent = original;
     btn.disabled = false;
   }, 800);
+}
+
+// ── Delete Session ───────────────────────────────────────────────────────────
+export function deleteSession() {
+  const sessionId = state.activeSessionId;
+  if (!sessionId) return;
+
+  showConfirmStrip(
+    "session-confirm-strip",
+    "Delete this session? This cannot be undone.",
+    () => {
+      // Remove from state
+      delete state.sessions[sessionId];
+
+      // Write to storage, then navigate to folder
+      saveToStorage({ sessions: state.sessions }, () => {
+        state.activeSessionId = null;
+        document.getElementById("btn-delete-session").style.display = "none";
+        renderFolder();
+        showView("folder");
+      });
+    },
+  );
+}
+
+// ── Bind Delete Session Button ───────────────────────────────────────────────
+export function bindDeleteSessionEvent() {
+  document
+    .getElementById("btn-delete-session")
+    .addEventListener("click", deleteSession);
 }
