@@ -3,6 +3,8 @@ import { renderCanvas } from "./canvas.js";
 import { renderPillGrid } from "./workspace.js";
 import { saveToStorage } from "./storage.js";
 import { showConfirmStrip } from "./ui.js";
+import { DEFAULT_TEMPLATES } from "../../defaults/templates.js";
+import { showConfirmStrip, showNameConfirmStrip, showInfoStrip } from "./ui.js";
 
 // ── Working State ────────────────────────────────────────────────────────────
 // workingPills is a LOCAL copy of the template's pills array.
@@ -30,6 +32,11 @@ export function enterEditorMode() {
   document.getElementById("btn-download").style.display = "none";
   document.getElementById("btn-save-template").style.display = "inline-block";
   document.getElementById("template-select").disabled = true;
+
+  // Show editor-only buttons; Reset only appears for default templates
+  document.getElementById("btn-delete-template").style.display = "inline-block";
+  document.getElementById("btn-reset-default").style.display =
+    template.isDefault ? "inline-block" : "none";
 }
 
 // ── Exit Editor Mode ─────────────────────────────────────────────────────────
@@ -47,6 +54,9 @@ export function exitEditorMode() {
   document.getElementById("btn-download").style.display = "inline-block";
   document.getElementById("btn-save-template").style.display = "none";
   document.getElementById("template-select").disabled = false;
+
+  document.getElementById("btn-delete-template").style.display = "none";
+  document.getElementById("btn-reset-default").style.display = "none";
 }
 
 // ── Render Pill Manager ──────────────────────────────────────────────────────
@@ -219,4 +229,104 @@ function showSaveTemplateFeedback() {
     btn.textContent = original;
     btn.disabled = false;
   }, 1000);
+}
+
+// ── Reset to Default (Session 17) ────────────────────────────────────────────
+// Reads from the hardcoded DEFAULT_TEMPLATES const — never from storage.
+// This is exactly why defaults live in a JS file and not only in storage.
+export function resetToDefault() {
+  const templateId = state.activeTemplateId;
+  const template = state.templates[templateId];
+  if (!template || !template.isDefault) return;
+
+  const defaultTemplate = DEFAULT_TEMPLATES[templateId];
+  if (!defaultTemplate) return;
+
+  showConfirmStrip(
+    "template-confirm-strip",
+    `Reset "${template.name}" to its original content? All custom edits will be lost.`,
+    () => {
+      // Restore from hardcoded source — deep copy to avoid mutating the const
+      state.templates[templateId] = {
+        ...defaultTemplate,
+        pills: defaultTemplate.pills.map((p) => ({ ...p })),
+      };
+
+      workingPills = defaultTemplate.pills.map((p) => ({ ...p }));
+
+      document.getElementById("script-canvas").textContent =
+        defaultTemplate.script_text;
+
+      renderPillManager(workingPills);
+
+      saveToStorage({ templates: state.templates }, () => {
+        const btn = document.getElementById("btn-reset-default");
+        const original = btn.textContent;
+        btn.textContent = "Reset ✓";
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.disabled = false;
+        }, 1000);
+      });
+    },
+    "Yes, Reset", // custom label — replaces the default "Yes, Delete"
+  );
+}
+
+// ── Delete Template (Session 18) ─────────────────────────────────────────────
+// Non-defaults: single confirm strip.
+// Defaults: name-confirmation — user must type the template name to proceed.
+export function deleteTemplate() {
+  const templateId = state.activeTemplateId;
+  const template = state.templates[templateId];
+  if (!template) return;
+
+  // Guard: never delete the last template — there'd be nothing to show
+  if (Object.keys(state.templates).length <= 1) {
+    showInfoStrip(
+      "template-confirm-strip",
+      "Can't delete the last template. Create another one first.",
+    );
+    return;
+  }
+
+  const doDelete = () => {
+    delete state.templates[templateId];
+
+    saveToStorage({ templates: state.templates }, () => {
+      // Rebuild the dropdown without a circular import
+      const select = document.getElementById("template-select");
+      select.innerHTML = "";
+      Object.values(state.templates).forEach((t) => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.name;
+        select.appendChild(opt);
+      });
+
+      // Switch to the first remaining template and return to usage mode
+      if (select.options.length > 0) {
+        state.activeTemplateId = select.options[0].value;
+        select.value = state.activeTemplateId;
+        document.getElementById("mode-select").value = "usage";
+        exitEditorMode();
+      }
+    });
+  };
+
+  if (template.isDefault) {
+    showNameConfirmStrip(
+      "template-confirm-strip",
+      `"${template.name}" is a default template. Type its name to confirm deletion.`,
+      template.name,
+      doDelete,
+    );
+  } else {
+    showConfirmStrip(
+      "template-confirm-strip",
+      `Delete "${template.name}"? This cannot be undone.`,
+      doDelete,
+    );
+  }
 }

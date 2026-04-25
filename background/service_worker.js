@@ -1,6 +1,6 @@
 // Load the hardcoded default templates into this scope.
 // importScripts works in Chrome extension service workers.
-importScripts("../defaults/templates.js");
+import { DEFAULT_TEMPLATES } from "../defaults/templates.js";
 
 // When the extension is first installed, seed storage with defaults.
 // "update" events are intentionally excluded — we never overwrite

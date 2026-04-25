@@ -10,6 +10,11 @@ import {
 } from "./modules/workspace.js";
 import { saveSession } from "./modules/canvas.js";
 import { saveTemplate } from "./modules/templateEditor.js";
+import {
+  saveTemplate,
+  resetToDefault,
+  deleteTemplate,
+} from "./modules/templateEditor.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {
@@ -38,4 +43,10 @@ function bindFooterEvents() {
   document
     .getElementById("btn-save-template")
     .addEventListener("click", saveTemplate);
+  document
+    .getElementById("btn-reset-default")
+    .addEventListener("click", resetToDefault);
+  document
+    .getElementById("btn-delete-template")
+    .addEventListener("click", deleteTemplate);
 }
