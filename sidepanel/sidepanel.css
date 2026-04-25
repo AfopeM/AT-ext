@@ -475,3 +475,34 @@ body {
   display: flex;
   gap: 6px;
 }
+
+/* ── Template Editor — Pill Manager ─────────────────────────────────────────── */
+.pill-manager-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pill-manager-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pill-manager-key {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.pill-manager-remove {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.pill-manager-add-row {
+  padding: 8px 12px;
+}

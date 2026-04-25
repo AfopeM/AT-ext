@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import { updateBreadcrumb } from "./views.js";
 import { renderCanvas, updateTokens } from "./canvas.js";
+import { enterEditorMode, exitEditorMode } from "./templateEditor.js";
 
 // ── Populate Template Dropdown ──
 export function populateTemplateDropdown() {
@@ -81,8 +82,13 @@ export function bindTopBarEvents() {
     activateTemplate(e.target.value);
   });
 
+  // Inside bindTopBarEvents():
   document.getElementById("mode-select").addEventListener("change", (e) => {
-    console.log("[Mode] Switched to:", e.target.value);
+    if (e.target.value === "editor") {
+      enterEditorMode();
+    } else {
+      exitEditorMode();
+    }
   });
 
   document
