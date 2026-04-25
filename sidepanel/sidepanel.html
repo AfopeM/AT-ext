@@ -87,10 +87,16 @@
           <span id="folder-patient-name" class="folder-title"
             >Patient Name</span
           >
-          <button id="btn-new-script" class="btn btn--primary">
-            + New Script
-          </button>
+          <div style="display: flex; gap: 6px; align-items: center">
+            <button id="btn-delete-patient" class="btn btn--danger">
+              🗑 Delete Patient
+            </button>
+            <button id="btn-new-script" class="btn btn--primary">
+              + New Script
+            </button>
+          </div>
         </div>
+        <div id="patient-confirm-strip" class="confirm-strip"></div>
       </div>
 
       <!-- Session list -->
@@ -138,11 +144,21 @@
       </div>
 
       <!-- ROW 5: Footer -->
+      <div id="session-confirm-strip" class="confirm-strip"></div>
       <footer class="footer">
-        <button id="btn-save" class="btn btn--secondary">Save Session</button>
-        <button id="btn-download" class="btn btn--primary">
-          ⬇ Download .txt
+        <button
+          id="btn-delete-session"
+          class="btn btn--danger"
+          style="display: none"
+        >
+          🗑 Delete
         </button>
+        <div style="display: flex; gap: 6px">
+          <button id="btn-save" class="btn btn--secondary">Save Session</button>
+          <button id="btn-download" class="btn btn--primary">
+            ⬇ Download .rtf
+          </button>
+        </div>
       </footer>
     </div>
 

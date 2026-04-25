@@ -443,3 +443,35 @@ body {
   color: var(--text-muted);
   flex-shrink: 0;
 }
+
+/* ── Danger Button ──────────────────────────────────────────────────────── */
+.btn--danger {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.btn--danger:hover {
+  background: #fca5a5;
+}
+
+/* ── Confirm Strip ──────────────────────────────────────────────────────── */
+.confirm-strip {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #fff7ed;
+  border-top: 1px solid #fed7aa;
+  flex-shrink: 0;
+}
+
+.confirm-strip__message {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.confirm-strip__actions {
+  display: flex;
+  gap: 6px;
+}

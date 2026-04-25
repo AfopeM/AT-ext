@@ -1,8 +1,9 @@
-// import { state } from "./modules/state.js";
+import { downloadRtf } from "./modules/export.js";
 import { loadTemplates, loadPatients } from "./modules/storage.js";
 import { showView, bindBreadcrumbEvents } from "./modules/views.js";
 import { renderHub, bindHubEvents } from "./modules/hub.js";
 import { renderFolder, bindFolderEvents } from "./modules/folder.js";
+import { bindDeleteSessionEvent } from "./modules/canvas.js";
 import {
   populateTemplateDropdown,
   bindTopBarEvents,
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bindHubEvents();
       bindFolderEvents();
       bindBreadcrumbEvents(renderHub, renderFolder);
+      bindDeleteSessionEvent();
       bindFooterEvents();
       showView("hub");
     });
@@ -26,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function bindFooterEvents() {
   const saveBtn = document.getElementById("btn-save");
+  document
+    .getElementById("btn-download")
+    .addEventListener("click", downloadRtf);
   if (saveBtn) {
     saveBtn.addEventListener("click", saveSession);
   }
