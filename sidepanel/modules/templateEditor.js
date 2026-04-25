@@ -2,7 +2,6 @@ import { state } from "./state.js";
 import { renderCanvas } from "./canvas.js";
 import { renderPillGrid } from "./workspace.js";
 import { saveToStorage } from "./storage.js";
-import { showConfirmStrip } from "./ui.js";
 import { DEFAULT_TEMPLATES } from "../../defaults/templates.js";
 import { showConfirmStrip, showNameConfirmStrip, showInfoStrip } from "./ui.js";
 

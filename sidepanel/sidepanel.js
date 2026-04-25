@@ -3,13 +3,11 @@ import { loadTemplates, loadPatients } from "./modules/storage.js";
 import { showView, bindBreadcrumbEvents } from "./modules/views.js";
 import { renderHub, bindHubEvents } from "./modules/hub.js";
 import { renderFolder, bindFolderEvents } from "./modules/folder.js";
-import { bindDeleteSessionEvent } from "./modules/canvas.js";
+import { saveSession, bindDeleteSessionEvent } from "./modules/canvas.js";
 import {
   populateTemplateDropdown,
   bindTopBarEvents,
 } from "./modules/workspace.js";
-import { saveSession } from "./modules/canvas.js";
-import { saveTemplate } from "./modules/templateEditor.js";
 import {
   saveTemplate,
   resetToDefault,
