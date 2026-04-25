@@ -1,58 +1,57 @@
 import { state } from "./state.js";
 import { renderCanvas } from "./canvas.js";
 import { renderPillGrid } from "./workspace.js";
+import { saveToStorage } from "./storage.js";
+import { showConfirmStrip } from "./ui.js";
+
+// ── Working State ────────────────────────────────────────────────────────────
+// workingPills is a LOCAL copy of the template's pills array.
+// It lives only in this module during an active editor session.
+// It is NEVER written to state.templates until saveTemplate() is called.
+// If the user switches modes without saving, it's discarded.
+
+let workingPills = [];
 
 // ── Enter Editor Mode ────────────────────────────────────────────────────────
-// Replaces the pill grid with a pill manager panel.
-// Replaces the canvas with the raw script_text (bracket syntax visible).
-
 export function enterEditorMode() {
   const template = state.templates[state.activeTemplateId];
   if (!template) return;
 
-  // 1. Swap pill grid → pill manager
-  renderPillManager(template.pills);
+  // Deep-copy so edits don't bleed into state until Save is clicked
+  workingPills = template.pills.map((p) => ({ ...p }));
 
-  // 2. Swap canvas → raw text editor
+  renderPillManager(workingPills);
+
+  // Show raw bracket text — no rendered tokens
   const canvas = document.getElementById("script-canvas");
-  canvas.textContent = template.script_text; // plain text, no HTML tokens
+  canvas.textContent = template.script_text;
 
-  // 3. Swap footer buttons
   document.getElementById("btn-save").style.display = "none";
   document.getElementById("btn-download").style.display = "none";
   document.getElementById("btn-save-template").style.display = "inline-block";
-
-  // 4. Lock the template dropdown (can't switch templates mid-edit)
   document.getElementById("template-select").disabled = true;
 }
 
-// ── Exit Editor Mode (back to Usage) ────────────────────────────────────────
-// Re-renders the canvas with tokens and restores the pill input grid.
-
+// ── Exit Editor Mode ─────────────────────────────────────────────────────────
+// Discards workingPills. Re-renders canvas from the SAVED template state.
 export function exitEditorMode() {
   const template = state.templates[state.activeTemplateId];
   if (!template) return;
 
-  // 1. Restore pill input grid
-  renderPillGrid(template.pills);
+  workingPills = [];
 
-  // 2. Re-render canvas with tokens (reads from template, not canvas text)
+  renderPillGrid(template.pills);
   renderCanvas(template);
 
-  // 3. Restore footer buttons
   document.getElementById("btn-save").style.display = "inline-block";
   document.getElementById("btn-download").style.display = "inline-block";
   document.getElementById("btn-save-template").style.display = "none";
-
-  // 4. Unlock the template dropdown
   document.getElementById("template-select").disabled = false;
 }
 
 // ── Render Pill Manager ──────────────────────────────────────────────────────
-// Shows each pill as a labeled row with a ✕ remove button.
-// "Add Pill" button placeholder — wired up in Session 15.
-
-export function renderPillManager(pills) {
+// Renders the current workingPills list with ✕ buttons and the Add Pill form trigger.
+function renderPillManager(pills) {
   const grid = document.getElementById("pill-grid");
   grid.innerHTML = "";
 
@@ -67,12 +66,157 @@ export function renderPillManager(pills) {
       <button class="btn btn--danger pill-manager-remove" data-key="${pill.key}">✕</button>
     `;
 
+    // Wire ✕ button directly here — no event delegation needed
+    row.querySelector(".pill-manager-remove").addEventListener("click", () => {
+      removePill(pill.key);
+    });
+
     grid.appendChild(row);
   });
 
-  // Add Pill button — action wired in Session 15, present now so layout is visible
   const addRow = document.createElement("div");
   addRow.className = "pill-manager-add-row";
   addRow.innerHTML = `<button id="btn-add-pill" class="btn btn--secondary">+ Add Pill</button>`;
   grid.appendChild(addRow);
+
+  document
+    .getElementById("btn-add-pill")
+    .addEventListener("click", showAddPillForm);
+}
+
+// ── Remove Pill ──────────────────────────────────────────────────────────────
+// 1. Strips the pill from workingPills
+// 2. Sweeps the canvas: removes all [Label] occurrences
+// 3. Re-renders the pill manager
+function removePill(key) {
+  const pill = workingPills.find((p) => p.key === key);
+  if (!pill) return;
+
+  workingPills = workingPills.filter((p) => p.key !== key);
+
+  // Sweep canvas: regex-escape the label, then remove all [Label] occurrences
+  const canvas = document.getElementById("script-canvas");
+  const escapedLabel = pill.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  canvas.textContent = canvas.textContent.replace(
+    new RegExp(`\\[${escapedLabel}\\]`, "g"),
+    "",
+  );
+
+  renderPillManager(workingPills);
+}
+
+// ── Show Add Pill Form ───────────────────────────────────────────────────────
+// Replaces the "+ Add Pill" button with an inline two-field form.
+function showAddPillForm() {
+  const grid = document.getElementById("pill-grid");
+  const addRow = grid.querySelector(".pill-manager-add-row");
+
+  addRow.innerHTML = `
+    <div class="add-pill-form">
+      <input id="add-pill-label" class="pill-input" type="text"
+        placeholder="Display label — e.g. Doctor's Name" autocomplete="off" />
+      <input id="add-pill-key" class="pill-input pill-key-preview" type="text"
+        placeholder="key (auto-generated)" readonly />
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <button id="btn-confirm-add-pill" class="btn btn--primary">Add</button>
+        <button id="btn-cancel-add-pill" class="btn btn--secondary">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  const labelInput = document.getElementById("add-pill-label");
+  const keyInput = document.getElementById("add-pill-key");
+
+  // Auto-generate the key slug as the user types the label
+  labelInput.addEventListener("input", () => {
+    keyInput.value = labelInput.value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+  });
+
+  document
+    .getElementById("btn-confirm-add-pill")
+    .addEventListener("click", () => {
+      confirmAddPill(labelInput.value.trim(), keyInput.value.trim());
+    });
+
+  document
+    .getElementById("btn-cancel-add-pill")
+    .addEventListener("click", () => {
+      renderPillManager(workingPills);
+    });
+
+  labelInput.focus();
+}
+
+// ── Confirm Add Pill ─────────────────────────────────────────────────────────
+function confirmAddPill(label, key) {
+  if (!label || !key) return;
+
+  // Guard against duplicate keys
+  if (workingPills.some((p) => p.key === key)) {
+    const input = document.getElementById("add-pill-label");
+    input.style.borderColor = "red";
+    input.placeholder = "A pill with that key already exists";
+    input.value = "";
+    return;
+  }
+
+  workingPills.push({ key, label });
+
+  // Append [Label] at the end of the canvas text so it's immediately usable
+  const canvas = document.getElementById("script-canvas");
+  canvas.textContent = canvas.textContent.trimEnd() + `\n[${label}]`;
+
+  renderPillManager(workingPills);
+}
+
+// ── Save Template (Session 16) ───────────────────────────────────────────────
+// Reads canvas text + workingPills, updates state, writes to storage.
+// Default templates show a warning strip before committing.
+export function saveTemplate() {
+  const templateId = state.activeTemplateId;
+  const template = state.templates[templateId];
+  if (!template) return;
+
+  const newScriptText = document.getElementById("script-canvas").textContent;
+
+  const doSave = () => {
+    // Commit workingPills and new script text into state
+    state.templates[templateId] = {
+      ...template,
+      pills: workingPills,
+      script_text: newScriptText,
+    };
+
+    saveToStorage({ templates: state.templates }, () => {
+      showSaveTemplateFeedback();
+    });
+  };
+
+  if (template.isDefault) {
+    // Show a warning — this is recoverable (Reset to Default in Session 17)
+    // but the user should know they're overwriting a default
+    showConfirmStrip(
+      "template-confirm-strip",
+      `"${template.name}" is a default template. Saving will overwrite it — you can restore it later with Reset to Default.`,
+      doSave,
+    );
+  } else {
+    doSave();
+  }
+}
+
+// ── Save Feedback ────────────────────────────────────────────────────────────
+function showSaveTemplateFeedback() {
+  const btn = document.getElementById("btn-save-template");
+  const original = btn.textContent;
+  btn.textContent = "Saved ✓";
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 1000);
 }

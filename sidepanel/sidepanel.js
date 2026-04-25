@@ -9,7 +9,7 @@ import {
   bindTopBarEvents,
 } from "./modules/workspace.js";
 import { saveSession } from "./modules/canvas.js";
-import { enterEditorMode, exitEditorMode } from "./modules/templateEditor.js";
+import { saveTemplate } from "./modules/templateEditor.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {
@@ -35,7 +35,7 @@ function bindFooterEvents() {
   if (saveBtn) {
     saveBtn.addEventListener("click", saveSession);
   }
-  document.getElementById("btn-save-template").addEventListener("click", () => {
-    console.log("[Editor] Save Template — wired in Session 16.");
-  });
+  document
+    .getElementById("btn-save-template")
+    .addEventListener("click", saveTemplate);
 }

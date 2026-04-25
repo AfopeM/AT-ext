@@ -506,3 +506,19 @@ body {
 .pill-manager-add-row {
   padding: 8px 12px;
 }
+
+/* ── Add Pill Inline Form ────────────────────────────────────────────────────── */
+.add-pill-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 12px 8px;
+  background: var(--accent-soft);
+  border-top: 1px solid var(--border);
+}
+
+.pill-key-preview {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 11px;
+}
