@@ -71,17 +71,17 @@ function buildRtf(lines) {
       .join("");
   });
 
-  // The \colortbl entries below mirror the RTF spec's fixed 16-color highlight palette.
+  // The \colortbl entries below are used by \highlightN.
   // Positions: 1=black 2=blue 3=cyan 4=green 5=magenta 6=red 7=yellow 8=white
   const colorTable =
     "{\\colortbl;" +
     "\\red0\\green0\\blue0;" + // 1 black
     "\\red0\\green0\\blue255;" + // 2 blue
     "\\red0\\green255\\blue255;" + // 3 cyan
-    "\\red0\\green128\\blue0;" + // 4 green
+    "\\red185\\green249\\blue179;" + // 4 filled highlight (#B9F9B3)
     "\\red255\\green0\\blue255;" + // 5 magenta
-    "\\red255\\green0\\blue0;" + // 6 red
-    "\\red255\\green255\\blue0;" + // 7 yellow  ← filled tokens land here
+    "\\red242\\green186\\blue186;" + // 6 unfilled highlight (#F2BABA)
+    "\\red255\\green255\\blue0;" + // 7 yellow
     "\\red255\\green255\\blue255;}"; // 8 white
 
   return (
@@ -120,3 +120,12 @@ export function downloadRtf() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+
+
+
+
+
+
+
+

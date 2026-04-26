@@ -1,5 +1,4 @@
 import {
-  deletePatient as deletePatientFromState,
   getActivePatientId,
   getPatients,
   getPendingPatient,
@@ -7,6 +6,8 @@ import {
   getTemplates,
   setActivePatientId,
   setActiveSessionId,
+  setPatients,
+  setSessions,
 } from "../../shared/state.js";
 import { showView } from "../../shared/views.js";
 import { saveToStorage, loadPatients } from "../../shared/storage.js";
@@ -101,20 +102,23 @@ function deletePatient() {
     "patient-confirm-strip",
     `Delete ${name} and all their scripts? This cannot be undone.`,
     () => {
-      // Sweep all sessions belonging to this patient first
-      Object.keys(sessions).forEach((id) => {
-        if (sessions[id].patient_id === patientId) {
-          delete sessions[id];
+      // Build cleaned copies; don't mutate getter-returned references.
+      const cleanedSessions = { ...sessions };
+      Object.keys(cleanedSessions).forEach((id) => {
+        if (cleanedSessions[id]?.patient_id === patientId) {
+          delete cleanedSessions[id];
         }
       });
 
-      // Remove the patient record
-      delete patients[patientId];
-      deletePatientFromState(patientId);
+      const cleanedPatients = { ...patients };
+      delete cleanedPatients[patientId];
+
+      setSessions(cleanedSessions);
+      setPatients(cleanedPatients);
 
       // Write both to storage, then navigate to hub
       saveToStorage(
-        { sessions, patients },
+        { sessions: cleanedSessions, patients: cleanedPatients },
         () => {
           setActivePatientId(null);
           setActiveSessionId(null);
