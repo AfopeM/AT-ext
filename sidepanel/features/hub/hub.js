@@ -13,9 +13,6 @@ import { saveToStorage } from "../../shared/storage.js";
 import { enterEditorView } from "../editor/templateEditor.js";
 
 // ── Avatar helpers ──────────────────────────────────────────────────────────
-// These give each patient a consistent color based on their name.
-// The same name always maps to the same color — no randomness.
-
 const AVATAR_BG = [
   "#DBEAFE",
   "#D1FAE5",
@@ -54,12 +51,10 @@ export function renderHub() {
 
   let patients = Object.values(getPatients());
 
-  // Filter by search
   if (searchVal) {
     patients = patients.filter((p) => p.name.toLowerCase().includes(searchVal));
   }
 
-  // Sort
   if (sortVal === "alpha") {
     patients.sort((a, b) => a.name.localeCompare(b.name));
   } else {
@@ -105,6 +100,22 @@ export function confirmNewPatient() {
   const name = nameInput.value.trim();
   if (!name) {
     nameInput.focus();
+    return;
+  }
+
+  // Duplicate check — case-insensitive so "Jon Snow" and "jon snow" collide.
+  const isDuplicate = Object.values(getPatients()).some(
+    (p) => p.name.toLowerCase() === name.toLowerCase(),
+  );
+  if (isDuplicate) {
+    nameInput.style.borderColor = "#dc2626";
+    nameInput.value = "";
+    nameInput.placeholder = `"${name}" already exists`;
+    nameInput.focus();
+    setTimeout(() => {
+      nameInput.style.borderColor = "";
+      nameInput.placeholder = "Full name — e.g. John Smith";
+    }, 2500);
     return;
   }
 
@@ -156,13 +167,11 @@ export function bindHubEvents() {
       if (e.key === "Enter") confirmNewPatient();
     });
 
-  // Search and sort — both re-render the list in real time
   document
     .getElementById("patient-search")
     .addEventListener("input", renderHub);
   document.getElementById("patient-sort").addEventListener("change", renderHub);
 
-  // Burger menu
   document.getElementById("btn-burger").addEventListener("click", () => {
     document.getElementById("burger-overlay").style.display = "flex";
   });
@@ -171,7 +180,6 @@ export function bindHubEvents() {
     document.getElementById("burger-overlay").style.display = "none";
   });
 
-  // Save user name from burger overlay
   document
     .getElementById("btn-save-user-name")
     .addEventListener("click", () => {
@@ -185,7 +193,6 @@ export function bindHubEvents() {
       });
     });
 
-  // Template Editor row in burger menu → navigate to editor view
   document.getElementById("btn-open-editor").addEventListener("click", () => {
     document.getElementById("burger-overlay").style.display = "none";
     enterEditorView();

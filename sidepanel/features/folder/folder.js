@@ -1,5 +1,6 @@
 import {
   getActivePatientId,
+  getActiveTemplateId,
   getPatients,
   getPendingPatient,
   getSessions,
@@ -8,6 +9,7 @@ import {
   setActiveSessionId,
   setPatient,
   setPatients,
+  setPendingPatient,
   setSessions,
 } from "../../shared/state.js";
 import { showView } from "../../shared/views.js";
@@ -78,12 +80,10 @@ export function renderFolder() {
     })
     .join("");
 
-  // Card interactions
   list.querySelectorAll(".session-card").forEach((card) => {
     const menuBtn = card.querySelector('[data-role="menu-btn"]');
     const menu = card.querySelector('[data-role="menu"]');
 
-    // Open session on card click (but not when interacting with menu)
     card.addEventListener("click", (e) => {
       if (e.target.closest('[data-role="menu-btn"]')) return;
       if (e.target.closest('[data-role="menu"]')) return;
@@ -92,27 +92,29 @@ export function renderFolder() {
 
     menuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      // Close any other open menus
       list
         .querySelectorAll(".session-menu.is-open")
         .forEach((m) => m.classList.remove("is-open"));
       menu.classList.toggle("is-open");
     });
 
-    card.querySelector('[data-role="rename"]').addEventListener("click", (e) => {
-      e.stopPropagation();
-      menu.classList.remove("is-open");
-      beginInlineRename(card.dataset.sessionId, card);
-    });
+    card
+      .querySelector('[data-role="rename"]')
+      .addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.remove("is-open");
+        beginInlineRename(card.dataset.sessionId, card);
+      });
 
-    card.querySelector('[data-role="delete"]').addEventListener("click", (e) => {
-      e.stopPropagation();
-      menu.classList.remove("is-open");
-      confirmDeleteScript(card.dataset.sessionId);
-    });
+    card
+      .querySelector('[data-role="delete"]')
+      .addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.remove("is-open");
+        confirmDeleteScript(card.dataset.sessionId);
+      });
   });
 
-  // Click outside closes any open menu
   document.addEventListener(
     "click",
     () => {
@@ -127,8 +129,10 @@ export function renderFolder() {
 // ── Folder Event Bindings ──
 export function bindFolderEvents() {
   document.getElementById("btn-folder-back").addEventListener("click", () => {
-    // Close out any edit state and return to hub without mutating anything.
     isEditingPatientInfo = false;
+    // Clear any unsaved new patient — if they never saved a session, the
+    // pending patient should not persist into the hub or the next flow.
+    setPendingPatient(null);
     loadPatients(() => {
       renderHub();
       showView("hub");
@@ -136,9 +140,7 @@ export function bindFolderEvents() {
   });
 
   document.getElementById("btn-new-script").addEventListener("click", () => {
-    const patient =
-      getPatients()[getActivePatientId()] || getPendingPatient();
-    // Re-render canvas from current state so edited templates are reflected
+    const patient = getPatients()[getActivePatientId()] || getPendingPatient();
     activateTemplate(getActiveTemplateId());
     if (patient) {
       document.getElementById("patient-name-input").value = patient.name;
@@ -150,13 +152,6 @@ export function bindFolderEvents() {
 }
 
 // ── Helper ──
-// You can also import this from hub.js if you want to be DRY,
-// but often these small formatters are kept in a 'utils.js'
-function formatDate(isoString) {
-  const d = new Date(isoString);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 function formatDateTime(isoString) {
   const d = new Date(isoString);
   return d.toLocaleString("en-US", {
@@ -211,7 +206,6 @@ function beginInlineRename(sessionId, card) {
   const meta = card.querySelector(".session-card__meta");
   const originalHtml = meta.innerHTML;
 
-  // Replace name with input + actions (keep badge/date below)
   nameEl.replaceWith(input);
   meta.insertBefore(actions, meta.children[1] || null);
   input.focus();
@@ -219,7 +213,6 @@ function beginInlineRename(sessionId, card) {
 
   const cancel = () => {
     meta.innerHTML = originalHtml;
-    // Re-render to re-bind events cleanly
     renderFolder();
   };
 
@@ -283,7 +276,6 @@ function deletePatient() {
     "patient-confirm-strip",
     `Delete ${name} and all their scripts? This cannot be undone.`,
     () => {
-      // Build cleaned copies; don't mutate getter-returned references.
       const cleanedSessions = { ...sessions };
       Object.keys(cleanedSessions).forEach((id) => {
         if (cleanedSessions[id]?.patient_id === patientId) {
@@ -297,7 +289,6 @@ function deletePatient() {
       setSessions(cleanedSessions);
       setPatients(cleanedPatients);
 
-      // Write both to storage, then navigate to hub
       saveToStorage(
         { sessions: cleanedSessions, patients: cleanedPatients },
         () => {
@@ -328,7 +319,9 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
   const fields = [
     { key: "__full_name__", label: "Full Name", value: patient.name ?? "" },
     ...Object.keys(aggregated)
-      .sort((a, b) => (pillLabelByKey[a] || a).localeCompare(pillLabelByKey[b] || b))
+      .sort((a, b) =>
+        (pillLabelByKey[a] || a).localeCompare(pillLabelByKey[b] || b),
+      )
       .map((key) => ({
         key,
         label: pillLabelByKey[key] || key,
@@ -366,7 +359,9 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
         isEditingPatientInfo = true;
         renderPatientInfoCard(patientId, patient, patientSessions, templates);
       });
-    card.querySelector("#btn-delete-patient").addEventListener("click", deletePatient);
+    card
+      .querySelector("#btn-delete-patient")
+      .addEventListener("click", deletePatient);
     return;
   }
 
@@ -398,7 +393,9 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
     </div>
   `;
 
-  card.querySelector("#btn-delete-patient").addEventListener("click", deletePatient);
+  card
+    .querySelector("#btn-delete-patient")
+    .addEventListener("click", deletePatient);
 
   card
     .querySelector("#btn-cancel-patient-info")
@@ -407,43 +404,41 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
       renderPatientInfoCard(patientId, patient, patientSessions, templates);
     });
 
-  card
-    .querySelector("#btn-save-patient-info")
-    .addEventListener("click", () => {
-      const inputs = Array.from(card.querySelectorAll("input[data-key]"));
-      const nextByKey = {};
-      inputs.forEach((inp) => {
-        nextByKey[inp.dataset.key] = inp.value.trim();
+  card.querySelector("#btn-save-patient-info").addEventListener("click", () => {
+    const inputs = Array.from(card.querySelectorAll("input[data-key]"));
+    const nextByKey = {};
+    inputs.forEach((inp) => {
+      nextByKey[inp.dataset.key] = inp.value.trim();
+    });
+
+    const nextName = nextByKey["__full_name__"] ?? patient.name ?? "";
+    delete nextByKey["__full_name__"];
+
+    if (nextName && nextName !== patient.name) {
+      setPatient(patientId, { ...patient, name: nextName });
+      document.getElementById("folder-patient-name").textContent = nextName;
+    }
+
+    const updatedSessions = { ...getSessions() };
+    Object.values(updatedSessions).forEach((s) => {
+      if (s?.patient_id !== patientId) return;
+      const pillValues = { ...(s.pill_values || {}) };
+      Object.entries(nextByKey).forEach(([key, value]) => {
+        pillValues[key] = value;
       });
+      updatedSessions[s.id] = { ...s, pill_values: pillValues };
+    });
 
-      const nextName = nextByKey["__full_name__"] ?? patient.name ?? "";
-      delete nextByKey["__full_name__"];
+    setSessions(updatedSessions);
 
-      // Update patient name in patients map (and header immediately).
-      if (nextName && nextName !== patient.name) {
-        setPatient(patientId, { ...patient, name: nextName });
-        document.getElementById("folder-patient-name").textContent = nextName;
-      }
-
-      // Propagate pill changes across all sessions for this patient.
-      const updatedSessions = { ...getSessions() };
-      Object.values(updatedSessions).forEach((s) => {
-        if (s?.patient_id !== patientId) return;
-        const pillValues = { ...(s.pill_values || {}) };
-        Object.entries(nextByKey).forEach(([key, value]) => {
-          pillValues[key] = value;
-        });
-        updatedSessions[s.id] = { ...s, pill_values: pillValues };
-      });
-
-      setSessions(updatedSessions);
-
-      // Persist updates.
-      saveToStorage({ patients: getPatients(), sessions: updatedSessions }, () => {
+    saveToStorage(
+      { patients: getPatients(), sessions: updatedSessions },
+      () => {
         isEditingPatientInfo = false;
         renderFolder();
-      });
-    });
+      },
+    );
+  });
 }
 
 function aggregateFilledPills(patientSessions) {
@@ -467,7 +462,6 @@ function buildPillLabelByKey(templates) {
       if (p?.key && p?.label) map[p.key] = p.label;
     });
   });
-  // Human-friendly labels for patient identifiers
   map.patient_name = map.patient_name || "Patient Name";
   map.patient_first_name = map.patient_first_name || "Patient First Name";
   return map;

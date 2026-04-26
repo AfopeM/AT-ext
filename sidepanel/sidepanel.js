@@ -1,12 +1,10 @@
 import { downloadRtf } from "./features/workspace/export.js";
 import { loadTemplates, loadPatients, loadUser } from "./shared/storage.js";
-import { getUserName } from "./shared/state.js";
+import { getUserName, setPendingPatient } from "./shared/state.js";
 import { showView } from "./shared/views.js";
 import { renderHub, bindHubEvents } from "./features/hub/hub.js";
-import { bindFolderEvents } from "./features/folder/folder.js";
-import {
-  saveSession,
-} from "./features/workspace/canvas.js";
+import { renderFolder, bindFolderEvents } from "./features/folder/folder.js";
+import { saveSession } from "./features/workspace/canvas.js";
 import {
   populateTemplateDropdown,
   bindTopBarEvents,
@@ -57,5 +55,13 @@ function bindFooterEvents() {
 function bindWorkspaceBack() {
   const btn = document.getElementById("btn-workspace-back");
   if (!btn) return;
-  btn.addEventListener("click", () => showView("folder"));
+  btn.addEventListener("click", () => {
+    // If the user never saved, the pendingPatient was never committed to
+    // storage. Clear it so it doesn't bleed into the next patient's session.
+    setPendingPatient(null);
+    // Re-render the folder so it picks up any pill values saved during
+    // this workspace session — this is the cache refresh fix.
+    renderFolder();
+    showView("folder");
+  });
 }
