@@ -3,6 +3,7 @@ import {
   getPendingPatient,
   setActivePatientId,
   setPendingPatient,
+  setUserName,
 } from "../../shared/state.js";
 import { showView } from "../../shared/views.js";
 import { updateTokens } from "../workspace/canvas.js";
@@ -176,6 +177,7 @@ export function bindHubEvents() {
     .addEventListener("click", () => {
       const name = document.getElementById("user-name-input").value.trim();
       if (!name) return;
+      setUserName(name);
       saveToStorage({ user: { name } }, () => {
         const btn = document.getElementById("btn-save-user-name");
         btn.textContent = "Saved ✓";

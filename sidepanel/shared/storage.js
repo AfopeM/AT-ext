@@ -1,4 +1,4 @@
-import { setPatients, setSessions, setTemplates } from "./state.js";
+import { setPatients, setSessions, setTemplates, setUserName } from "./state.js";
 
 // ── Load Templates ──
 export function loadTemplates(callback) {
@@ -36,6 +36,17 @@ export function saveToStorage(updates, callback) {
       console.error("[Storage] Write failed:", chrome.runtime.lastError);
       return;
     }
+    if (callback) callback();
+  });
+}
+
+// ── Load User ──
+export function loadUser(callback) {
+  chrome.storage.local.get("user", (data) => {
+    if (chrome.runtime.lastError) {
+      console.error("[Storage] Read error:", chrome.runtime.lastError);
+    }
+    setUserName(data.user?.name || null);
     if (callback) callback();
   });
 }

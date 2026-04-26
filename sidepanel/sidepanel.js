@@ -1,5 +1,6 @@
 import { downloadRtf } from "./features/workspace/export.js";
-import { loadTemplates, loadPatients } from "./shared/storage.js";
+import { loadTemplates, loadPatients, loadUser } from "./shared/storage.js";
+import { getUserName } from "./shared/state.js";
 import { showView } from "./shared/views.js";
 import { renderHub, bindHubEvents } from "./features/hub/hub.js";
 import { bindFolderEvents } from "./features/folder/folder.js";
@@ -15,7 +16,19 @@ import { initEditorView } from "./features/editor/templateEditor.js";
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {
     populateTemplateDropdown();
-    loadPatients(() => {
+
+    // Load patients and user name in parallel; proceed when both complete.
+    let remaining = 2;
+    const onBothLoaded = () => {
+      if (--remaining > 0) return;
+
+      // Pre-fill the burger input with the saved user name
+      const savedName = getUserName();
+      if (savedName) {
+        const input = document.getElementById("user-name-input");
+        if (input) input.value = savedName;
+      }
+
       renderHub();
       bindTopBarEvents();
       bindHubEvents();
@@ -24,7 +37,10 @@ document.addEventListener("DOMContentLoaded", () => {
       bindWorkspaceBack();
       initEditorView();
       showView("hub");
-    });
+    };
+
+    loadPatients(onBothLoaded);
+    loadUser(onBothLoaded);
   });
 });
 

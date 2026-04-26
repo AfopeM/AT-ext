@@ -16,6 +16,7 @@ const _state = {
   pendingPatient: null,
   sessions: {},
   activeSessionId: null,
+  userName: null,
 };
 
 // ── Templates ────────────────────────────────────────────────────────────────
@@ -113,4 +114,13 @@ export function setSession(id, val) {
 }
 export function deleteSession(id) {
   delete _state.sessions[id];
+}
+
+// ── User ─────────────────────────────────────────────────────────────────────
+
+export function getUserName() {
+  return _state.userName || null;
+}
+export function setUserName(val) {
+  _state.userName = val || null;
 }

@@ -19,6 +19,7 @@ import {
   setPillValues,
   setSession,
   setSessions,
+  getUserName,
 } from "../../shared/state.js";
 import { saveToStorage } from "../../shared/storage.js";
 import { showView } from "../../shared/views.js";
@@ -33,7 +34,11 @@ export function renderCanvas(template) {
     labelToKey[pill.label.toLowerCase()] = pill.key;
   });
 
-  const escaped = template.script_text
+  // Replace the literal agent name with the stored user name (fallback: 'Adam')
+  const agentName = getUserName() || "Adam";
+  const scriptWithName = template.script_text.replace(/\bAdam\b/g, agentName);
+
+  const escaped = scriptWithName
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
