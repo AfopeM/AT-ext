@@ -897,3 +897,21 @@ body {
 .burger-nav-row:hover {
   background: var(--accent-soft);
 }
+
+/* ── Editor View: in-header template selector ───────────────────────────── */
+.editor-template-select {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  max-width: 130px;
+}
+
+.editor-template-select option {
+  background: #1a1d23;
+  color: #ffffff;
+}

@@ -1,7 +1,7 @@
 import { getActivePatientId, getPatients, getPendingPatient } from "./state.js";
 
 export function showView(name) {
-  const views = ["hub", "folder", "workspace"];
+  const views = ["hub", "folder", "workspace", "editor"];
   views.forEach((v) => {
     const el = document.getElementById(`view-${v}`);
     if (el) el.style.display = v === name ? "flex" : "none";

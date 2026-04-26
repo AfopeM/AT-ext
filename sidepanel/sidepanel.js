@@ -10,6 +10,7 @@ import {
   populateTemplateDropdown,
   bindTopBarEvents,
 } from "./features/workspace/workspace.js";
+import { initEditorView } from "./features/editor/templateEditor.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {
@@ -21,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bindFolderEvents();
       bindFooterEvents();
       bindWorkspaceBack();
+      initEditorView();
       showView("hub");
     });
   });

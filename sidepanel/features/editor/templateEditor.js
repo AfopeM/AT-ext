@@ -7,10 +7,9 @@ import {
   setTemplate,
   setTemplates,
 } from "../../shared/state.js";
-import { renderCanvas } from "../workspace/canvas.js";
-import { renderPillGrid } from "../workspace/workspace.js";
 import { saveToStorage } from "../../shared/storage.js";
 import { DEFAULT_TEMPLATES } from "../../../defaults/templates.js";
+import { showView } from "../../shared/views.js";
 import {
   showConfirmStrip,
   showInfoStrip,
@@ -21,71 +20,95 @@ import {
 // workingPills is a LOCAL copy of the template's pills array.
 // It lives only in this module during an active editor session.
 // It is NEVER written to state.templates until saveTemplate() is called.
-// If the user switches modes without saving, it's discarded.
 
 let workingPills = [];
 
-// ── Enter Editor Mode ────────────────────────────────────────────────────────
-export function enterEditorMode() {
-  const template = getTemplate(getActiveTemplateId());
+// ── Init Editor View ─────────────────────────────────────────────────────────
+// Call once at startup. Wires:
+//   • Back arrow  → showView('hub')
+//   • editor-template-select → switch which template is being edited
+//   • Save / Reset / Delete footer buttons
+export function initEditorView() {
+  // Back arrow
+  document.getElementById("btn-editor-back").addEventListener("click", () => {
+    showView("hub");
+  });
+
+  // Template selector in the editor header
+  document
+    .getElementById("editor-template-select")
+    .addEventListener("change", (e) => {
+      loadEditorTemplate(e.target.value);
+    });
+
+  // Footer controls
+  document
+    .getElementById("btn-save-template")
+    .addEventListener("click", saveTemplate);
+
+  document
+    .getElementById("btn-reset-default")
+    .addEventListener("click", resetToDefault);
+
+  document
+    .getElementById("btn-delete-template")
+    .addEventListener("click", deleteTemplate);
+}
+
+// ── Populate Editor Template Selector ───────────────────────────────────────
+// Call this after templates have loaded (or after a template is created/deleted)
+// to keep the in-editor dropdown in sync with state.
+export function populateEditorTemplateSelect() {
+  const select = document.getElementById("editor-template-select");
+  const currentId = getActiveTemplateId();
+  select.innerHTML = "";
+
+  Object.values(getTemplates()).forEach((t) => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name;
+    if (t.id === currentId) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+// ── Load a Template into the Editor ─────────────────────────────────────────
+export function loadEditorTemplate(templateId) {
+  const template = getTemplate(templateId);
   if (!template) return;
 
-  // Deep-copy so edits don't bleed into state until Save is clicked
+  setActiveTemplateId(templateId);
+
+  // Deep-copy pills so edits don't bleed into state until Save is clicked
   workingPills = template.pills.map((p) => ({ ...p }));
 
   renderPillManager(workingPills);
 
   // Show raw bracket text — no rendered tokens
-  const canvas = document.getElementById("script-canvas");
-  canvas.textContent = template.script_text;
+  document.getElementById("editor-canvas").textContent = template.script_text;
 
-  const btnSave = document.getElementById("btn-save");
-  const btnDownload = document.getElementById("btn-download");
-  const btnSaveTemplate = document.getElementById("btn-save-template");
-  const templateSelect = document.getElementById("template-select");
-  if (btnSave) btnSave.style.display = "none";
-  if (btnDownload) btnDownload.style.display = "none";
-  if (btnSaveTemplate) btnSaveTemplate.style.display = "inline-block";
-  if (templateSelect) templateSelect.disabled = true;
+  // Show / hide Reset button depending on whether it's a default template
+  const btnReset = document.getElementById("btn-reset-default");
+  if (btnReset)
+    btnReset.style.display = template.isDefault ? "inline-block" : "none";
 
-  // Show editor-only buttons; Reset only appears for default templates
-  const btnDeleteTemplate = document.getElementById("btn-delete-template");
-  const btnResetDefault = document.getElementById("btn-reset-default");
-  if (btnDeleteTemplate) btnDeleteTemplate.style.display = "inline-block";
-  if (btnResetDefault)
-    btnResetDefault.style.display = template.isDefault ? "inline-block" : "none";
+  // Keep the header selector in sync
+  const select = document.getElementById("editor-template-select");
+  if (select) select.value = templateId;
 }
 
-// ── Exit Editor Mode ─────────────────────────────────────────────────────────
-// Discards workingPills. Re-renders canvas from the SAVED template state.
-export function exitEditorMode() {
-  const template = getTemplate(getActiveTemplateId());
-  if (!template) return;
-
-  workingPills = [];
-
-  renderPillGrid(template.pills);
-  renderCanvas(template);
-
-  const btnSave = document.getElementById("btn-save");
-  const btnDownload = document.getElementById("btn-download");
-  const btnSaveTemplate = document.getElementById("btn-save-template");
-  const templateSelect = document.getElementById("template-select");
-  if (btnSave) btnSave.style.display = "inline-block";
-  if (btnDownload) btnDownload.style.display = "inline-block";
-  if (btnSaveTemplate) btnSaveTemplate.style.display = "none";
-  if (templateSelect) templateSelect.disabled = false;
-
-  const btnDeleteTemplate = document.getElementById("btn-delete-template");
-  const btnResetDefault = document.getElementById("btn-reset-default");
-  if (btnDeleteTemplate) btnDeleteTemplate.style.display = "none";
-  if (btnResetDefault) btnResetDefault.style.display = "none";
+// ── Enter Editor View ────────────────────────────────────────────────────────
+// Public entry-point: populates the dropdown, loads the active template,
+// then calls showView('editor').
+export function enterEditorView() {
+  populateEditorTemplateSelect();
+  loadEditorTemplate(getActiveTemplateId());
+  showView("editor");
 }
 
 // ── Render Pill Manager ──────────────────────────────────────────────────────
-// Renders the current workingPills list with ✕ buttons and the Add Pill form trigger.
 function renderPillManager(pills) {
-  const grid = document.getElementById("pill-grid");
+  const grid = document.getElementById("editor-pill-grid");
   grid.innerHTML = "";
 
   pills.forEach((pill) => {
@@ -99,7 +122,6 @@ function renderPillManager(pills) {
       <button class="btn btn--danger pill-manager-remove" data-key="${pill.key}">✕</button>
     `;
 
-    // Wire ✕ button directly here — no event delegation needed
     row.querySelector(".pill-manager-remove").addEventListener("click", () => {
       removePill(pill.key);
     });
@@ -118,17 +140,13 @@ function renderPillManager(pills) {
 }
 
 // ── Remove Pill ──────────────────────────────────────────────────────────────
-// 1. Strips the pill from workingPills
-// 2. Sweeps the canvas: removes all [Label] occurrences
-// 3. Re-renders the pill manager
 function removePill(key) {
   const pill = workingPills.find((p) => p.key === key);
   if (!pill) return;
 
   workingPills = workingPills.filter((p) => p.key !== key);
 
-  // Sweep canvas: regex-escape the label, then remove all [Label] occurrences
-  const canvas = document.getElementById("script-canvas");
+  const canvas = document.getElementById("editor-canvas");
   const escapedLabel = pill.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   canvas.textContent = canvas.textContent.replace(
     new RegExp(`\\[${escapedLabel}\\]`, "g"),
@@ -139,9 +157,8 @@ function removePill(key) {
 }
 
 // ── Show Add Pill Form ───────────────────────────────────────────────────────
-// Replaces the "+ Add Pill" button with an inline two-field form.
 function showAddPillForm() {
-  const grid = document.getElementById("pill-grid");
+  const grid = document.getElementById("editor-pill-grid");
   const addRow = grid.querySelector(".pill-manager-add-row");
 
   addRow.innerHTML = `
@@ -160,7 +177,6 @@ function showAddPillForm() {
   const labelInput = document.getElementById("add-pill-label");
   const keyInput = document.getElementById("add-pill-key");
 
-  // Auto-generate the key slug as the user types the label
   labelInput.addEventListener("input", () => {
     keyInput.value = labelInput.value
       .toLowerCase()
@@ -188,7 +204,6 @@ function showAddPillForm() {
 function confirmAddPill(label, key) {
   if (!label || !key) return;
 
-  // Guard against duplicate keys
   if (workingPills.some((p) => p.key === key)) {
     const input = document.getElementById("add-pill-label");
     input.style.borderColor = "red";
@@ -199,25 +214,21 @@ function confirmAddPill(label, key) {
 
   workingPills.push({ key, label });
 
-  // Append [Label] at the end of the canvas text so it's immediately usable
-  const canvas = document.getElementById("script-canvas");
+  const canvas = document.getElementById("editor-canvas");
   canvas.textContent = canvas.textContent.trimEnd() + `\n[${label}]`;
 
   renderPillManager(workingPills);
 }
 
-// ── Save Template (Session 16) ───────────────────────────────────────────────
-// Reads canvas text + workingPills, updates state, writes to storage.
-// Default templates show a warning strip before committing.
+// ── Save Template ─────────────────────────────────────────────────────────────
 export function saveTemplate() {
   const templateId = getActiveTemplateId();
   const template = getTemplate(templateId);
   if (!template) return;
 
-  const newScriptText = document.getElementById("script-canvas").textContent;
+  const newScriptText = document.getElementById("editor-canvas").textContent;
 
   const doSave = () => {
-    // Commit workingPills and new script text into state
     setTemplate(templateId, {
       ...template,
       pills: workingPills,
@@ -230,8 +241,6 @@ export function saveTemplate() {
   };
 
   if (template.isDefault) {
-    // Show a warning — this is recoverable (Reset to Default in Session 17)
-    // but the user should know they're overwriting a default
     showConfirmStrip(
       "template-confirm-strip",
       `"${template.name}" is a default template. Saving will overwrite it — you can restore it later with Reset to Default.`,
@@ -242,7 +251,7 @@ export function saveTemplate() {
   }
 }
 
-// ── Save Feedback ────────────────────────────────────────────────────────────
+// ── Save Feedback ─────────────────────────────────────────────────────────────
 function showSaveTemplateFeedback() {
   const btn = document.getElementById("btn-save-template");
   const original = btn.textContent;
@@ -254,9 +263,7 @@ function showSaveTemplateFeedback() {
   }, 1000);
 }
 
-// ── Reset to Default (Session 17) ────────────────────────────────────────────
-// Reads from the hardcoded DEFAULT_TEMPLATES const — never from storage.
-// This is exactly why defaults live in a JS file and not only in storage.
+// ── Reset to Default ──────────────────────────────────────────────────────────
 export function resetToDefault() {
   const templateId = getActiveTemplateId();
   const template = getTemplate(templateId);
@@ -269,15 +276,13 @@ export function resetToDefault() {
     "template-confirm-strip",
     `Reset "${template.name}" to its original content? All custom edits will be lost.`,
     () => {
-      // Restore from hardcoded source — deep copy to avoid mutating the const
       setTemplate(templateId, {
         ...defaultTemplate,
         pills: defaultTemplate.pills.map((p) => ({ ...p })),
       });
 
       workingPills = defaultTemplate.pills.map((p) => ({ ...p }));
-
-      document.getElementById("script-canvas").textContent =
+      document.getElementById("editor-canvas").textContent =
         defaultTemplate.script_text;
 
       renderPillManager(workingPills);
@@ -293,20 +298,17 @@ export function resetToDefault() {
         }, 1000);
       });
     },
-    "Yes, Reset", // custom label — replaces the default "Yes, Delete"
+    "Yes, Reset",
   );
 }
 
-// ── Delete Template (Session 18) ─────────────────────────────────────────────
-// Non-defaults: single confirm strip.
-// Defaults: name-confirmation — user must type the template name to proceed.
+// ── Delete Template ────────────────────────────────────────────────────────────
 export function deleteTemplate() {
   const templateId = getActiveTemplateId();
   const templates = getTemplates();
   const template = templates[templateId];
   if (!template) return;
 
-  // Guard: never delete the last template — there'd be nothing to show
   if (Object.keys(templates).length <= 1) {
     showInfoStrip(
       "template-confirm-strip",
@@ -320,22 +322,11 @@ export function deleteTemplate() {
     deleteTemplateFromState(templateId);
 
     saveToStorage({ templates }, () => {
-      // Rebuild the dropdown without a circular import
-      const select = document.getElementById("template-select");
-      select.innerHTML = "";
-      Object.values(templates).forEach((t) => {
-        const opt = document.createElement("option");
-        opt.value = t.id;
-        opt.textContent = t.name;
-        select.appendChild(opt);
-      });
-
-      // Switch to the first remaining template and return to usage mode
-      if (select.options.length > 0) {
-        setActiveTemplateId(select.options[0].value);
-        select.value = getActiveTemplateId();
-        // Editor/usage mode toggle was removed in Step 11.
-        // Template Editor will be reintroduced as a standalone view in Step 12.
+      // Rebuild the editor dropdown and load the first remaining template
+      populateEditorTemplateSelect();
+      const remaining = Object.values(getTemplates());
+      if (remaining.length > 0) {
+        loadEditorTemplate(remaining[0].id);
       }
     });
   };

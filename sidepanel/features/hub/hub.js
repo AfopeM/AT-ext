@@ -9,6 +9,7 @@ import { updateTokens } from "../workspace/canvas.js";
 import { loadSessions } from "../../shared/storage.js";
 import { renderFolder } from "../folder/folder.js";
 import { saveToStorage } from "../../shared/storage.js";
+import { enterEditorView } from "../editor/templateEditor.js";
 
 // ── Avatar helpers ──────────────────────────────────────────────────────────
 // These give each patient a consistent color based on their name.
@@ -181,6 +182,12 @@ export function bindHubEvents() {
         setTimeout(() => (btn.textContent = "Save"), 1000);
       });
     });
+
+  // Template Editor row in burger menu → navigate to editor view
+  document.getElementById("btn-open-editor").addEventListener("click", () => {
+    document.getElementById("burger-overlay").style.display = "none";
+    enterEditorView();
+  });
 }
 
 // ── Helper ──────────────────────────────────────────────────────────────────
