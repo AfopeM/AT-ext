@@ -54,7 +54,7 @@ export function renderFolder() {
       const templateName = template ? template.name : s.template_id;
       const scriptName =
         (typeof s.name === "string" && s.name.trim()) ||
-        `${patient?.name || "Patient"} ${templateName}`.trim();
+        `${patient?.name || "Patient"} Call Script`.trim();
       const badgeClass = templateBadgeClass(templateName);
       return `
       <div class="session-card" data-session-id="${s.id}">
@@ -87,6 +87,7 @@ export function renderFolder() {
     card.addEventListener("click", (e) => {
       if (e.target.closest('[data-role="menu-btn"]')) return;
       if (e.target.closest('[data-role="menu"]')) return;
+      if (card.dataset.renaming === "true") return;
       loadSession(card.dataset.sessionId);
     });
 
@@ -178,12 +179,18 @@ function beginInlineRename(sessionId, card) {
   const nameEl = card.querySelector('[data-role="script-name"]');
   if (!nameEl) return;
 
+  // Flag the card so the click-to-open-session handler ignores clicks
+  card.dataset.renaming = "true";
+
   const current = (session.name || nameEl.textContent || "").trim();
   const input = document.createElement("input");
   input.className = "patient-input";
   input.type = "text";
   input.value = current;
   input.autocomplete = "off";
+
+  // Stop click propagation so the card nav handler never fires
+  input.addEventListener("click", (e) => e.stopPropagation());
 
   const actions = document.createElement("div");
   actions.style.display = "flex";
@@ -319,6 +326,8 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
   const fields = [
     { key: "__full_name__", label: "Full Name", value: patient.name ?? "" },
     ...Object.keys(aggregated)
+      // Filter out pill keys that are already represented by the patient record
+      .filter((key) => key !== "patient_name" && key !== "patient_first_name")
       .sort((a, b) =>
         (pillLabelByKey[a] || a).localeCompare(pillLabelByKey[b] || b),
       )
@@ -347,10 +356,6 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
           )
           .join("")}
       </div>
-      <div class="patient-info-actions">
-        <button id="btn-delete-patient" class="btn btn--danger" type="button">🗑 Delete Patient</button>
-        <div></div>
-      </div>
     `;
 
     card
@@ -359,9 +364,6 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
         isEditingPatientInfo = true;
         renderPatientInfoCard(patientId, patient, patientSessions, templates);
       });
-    card
-      .querySelector("#btn-delete-patient")
-      .addEventListener("click", deletePatient);
     return;
   }
 
@@ -387,15 +389,7 @@ function renderPatientInfoCard(patientId, patient, patientSessions, templates) {
         )
         .join("")}
     </div>
-    <div class="patient-info-actions">
-      <button id="btn-delete-patient" class="btn btn--danger" type="button">🗑 Delete Patient</button>
-      <div></div>
-    </div>
   `;
-
-  card
-    .querySelector("#btn-delete-patient")
-    .addEventListener("click", deletePatient);
 
   card
     .querySelector("#btn-cancel-patient-info")

@@ -35,7 +35,15 @@ export function activateTemplate(templateId) {
 
   setActiveTemplateId(templateId);
   setActiveSessionId(null);
-  document.getElementById("template-select").disabled = false;
+
+  // Sync the dropdown value so it always reflects the active template,
+  // even when activateTemplate is called programmatically (e.g. "New Script").
+  const select = document.getElementById("template-select");
+  if (select) {
+    select.value = templateId;
+    select.disabled = false;
+  }
+
   setPillValues({});
   document.getElementById("patient-name-input").value = "";
 

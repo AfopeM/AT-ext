@@ -27,7 +27,6 @@ import { renderFolder } from "../folder/folder.js";
 import { renderPillGrid } from "./workspace.js";
 
 // ── Section Header Regex ──
-// Matches lines that are pure section titles: SPIEL:, TEXT TEMPLATE:, TEXT/VM:
 const SECTION_HEADER_RE = /^(SPIEL|TEXT\s+TEMPLATE|TEXT\/VM)\s*:$/i;
 
 // ── Render Canvas ──
@@ -38,8 +37,8 @@ export function renderCanvas(template) {
     labelToKey[pill.label.toLowerCase()] = pill.key;
   });
 
-  // Replace [User] token with the stored agent name (fallback: 'Adam')
-  const agentName = getUserName() || "Adam";
+  // Replace [User] token with stored agent name — fallback to literal "[User]"
+  const agentName = getUserName() || "[User]";
   const scriptWithName = template.script_text.replace(/\[User\]/g, agentName);
 
   const escaped = scriptWithName
@@ -47,7 +46,6 @@ export function renderCanvas(template) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Replace [Token] brackets with pill-token spans
   const withTokens = escaped.replace(/\[([^\]]+)\]/g, (match, label) => {
     const key = labelToKey[label.toLowerCase()];
     if (key) {
@@ -56,7 +54,6 @@ export function renderCanvas(template) {
     return match;
   });
 
-  // Split by newline, wrap section header lines, rejoin with <br>
   const lines = withTokens.split("\n").map((line) => {
     const plain = line.replace(/<[^>]+>/g, "").trim();
     if (SECTION_HEADER_RE.test(plain)) {
@@ -132,13 +129,12 @@ export function saveSession() {
   const canvasHtml = document.getElementById("script-canvas").innerHTML;
   const now = new Date().toISOString();
 
-  const template = getTemplate(templateId);
   const patient = getPatient(patientId) || getPendingPatient();
   const patientName =
     patient?.name || document.getElementById("patient-name-input")?.value || "";
-  const templateName = template?.name || templateId;
 
-  const defaultName = `${patientName} ${templateName}`.trim();
+  // Default name format: "Jon Snow Call Script"
+  const defaultName = `${patientName} Call Script`.trim();
   const existingName = getActiveSessionId()
     ? getSession(sessionId)?.name
     : null;
@@ -173,8 +169,7 @@ export function saveSession() {
 }
 
 function generateSessionId(patientId, templateId) {
-  const timestamp = Math.floor(Date.now() / 1000);
-  return `${patientId}_${templateId}_${timestamp}`;
+  return `${patientId}_${templateId}_${Math.floor(Date.now() / 1000)}`;
 }
 
 function showSavedFeedback() {
