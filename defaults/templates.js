@@ -36,7 +36,9 @@ Hi [Patient First Name],
 
 This is [User] with Advanced Therapeutics. We're just reaching out in regards to the [Device] for your [Body Part] that Dr. [Doctor's Name] prescribed.
 
-We just want to confirm if the one we delivered to you is still working properly or if you need a replacement? Please feel free to reply to this message or give us a call back at 631-909-6290. Thank you!`,
+We just want to confirm if the one we delivered to you is still working properly or if you need a replacement? 
+
+Please feel free to reply to this message or give us a call back at 631-909-6290. Thank you!`,
   },
 
   sx_center: {
@@ -106,7 +108,9 @@ Do you possibly have any special delivery instructions?
 
 Great! I'll have that noted. You can expect delivery within 1–2 business days. No signature is required upon delivery.
 
-This device is very easy to use. I'll send you a tutorial video that shows you how to use it. Would you prefer it via email or phone number? Great!
+This device is very easy to use. I'll send you a tutorial video that shows you how to use it. Would you prefer it via email or phone number? 
+
+Great!
 
 Let me just quickly send that to you. There!
 

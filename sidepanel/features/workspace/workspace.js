@@ -97,9 +97,9 @@ export function bindTopBarEvents() {
 // ── Helper ──
 function getPlaceholderHint(key) {
   const hints = {
-    doctors_name: "Dr. Rivera",
+    doctors_name: "Rivera",
     body_part: "lower back",
-    device: "TENS Unit",
+    device: "Ice Pack",
     delivered_date: "June 12",
     insurance_type: "Medicare",
     sx_date: "July 22",
