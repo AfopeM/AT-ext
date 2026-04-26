@@ -24,11 +24,40 @@
     <!-- VIEW: Hub -->
     <div
       id="view-hub"
-      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+      style="display: none; flex-direction: column; flex: 1; overflow: hidden"
     >
-      <div class="hub-header">
-        <span class="hub-title">Patients</span>
-        <button id="btn-new-patient" class="btn btn--primary">
+      <!-- Dark App Header -->
+      <div class="app-header">
+        <div class="app-header__logo">
+          <span class="app-header__plus">+</span>
+        </div>
+        <span class="app-header__title">Advanced Therapeutics</span>
+        <button class="app-header__burger" id="btn-burger" title="Menu">
+          &#9776;
+        </button>
+      </div>
+
+      <!-- Search + Sort Row -->
+      <div class="hub-search-row">
+        <div class="hub-search-wrap">
+          <span class="hub-search-icon">&#128269;</span>
+          <input
+            id="patient-search"
+            class="hub-search-input"
+            type="text"
+            placeholder="Search patients..."
+            autocomplete="off"
+          />
+        </div>
+        <select id="patient-sort" class="hub-sort-select">
+          <option value="recent">Sort &#9662;</option>
+          <option value="alpha">A–Z</option>
+        </select>
+      </div>
+
+      <!-- Full-width New Patient Button -->
+      <div class="hub-new-patient-row">
+        <button id="btn-new-patient" class="btn btn--primary hub-new-btn">
           + New Patient
         </button>
       </div>
@@ -51,8 +80,33 @@
       </div>
 
       <!-- Patient list -->
-      <div id="patient-list" class="patient-list">
-        <!-- Injected by JS -->
+      <div id="patient-list" class="patient-list"></div>
+    </div>
+
+    <!-- Burger Menu Overlay -->
+    <div id="burger-overlay" class="burger-overlay" style="display: none">
+      <div class="burger-overlay__header">
+        <button id="btn-burger-close" class="burger-overlay__back">
+          &#8249;
+        </button>
+        <span class="burger-overlay__title">Settings</span>
+      </div>
+      <div class="burger-overlay__body">
+        <div class="burger-setting-row">
+          <label class="burger-setting-label">Your Name</label>
+          <input
+            id="user-name-input"
+            class="patient-input"
+            type="text"
+            placeholder="e.g. Adam"
+            autocomplete="off"
+          />
+          <button id="btn-save-user-name" class="btn btn--primary">Save</button>
+        </div>
+        <div class="burger-nav-row" id="btn-open-editor">
+          <span>Template Editor</span>
+          <span>&#8250;</span>
+        </div>
       </div>
     </div>
 

@@ -3,6 +3,7 @@ import { loadTemplates, loadPatients } from "./shared/storage.js";
 import { showView } from "./shared/views.js";
 import { renderHub, bindHubEvents } from "./features/hub/hub.js";
 import { bindFolderEvents } from "./features/folder/folder.js";
+import { getActivePatientId, getActiveTemplateId } from "./shared/state.js";
 import {
   saveSession,
   bindDeleteSessionEvent,
@@ -25,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bindTopBarEvents();
       bindHubEvents();
       bindFolderEvents();
+      bindTabBar();
       bindDeleteSessionEvent();
       bindFooterEvents();
       showView("hub");
@@ -49,4 +51,16 @@ function bindFooterEvents() {
   document
     .getElementById("btn-delete-template")
     .addEventListener("click", deleteTemplate);
+}
+
+function bindTabBar() {
+  document.querySelectorAll(".tab-bar__tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const view = tab.dataset.view;
+      // Don't navigate to folder/workspace if there's no context
+      if (view === "folder" && !getActivePatientId()) return;
+      if (view === "workspace" && !getActiveTemplateId()) return;
+      showView(view);
+    });
+  });
 }

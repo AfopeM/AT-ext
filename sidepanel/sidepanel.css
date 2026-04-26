@@ -490,3 +490,277 @@ body {
   color: var(--text-muted);
   text-align: center;
 }
+
+
+/* ── App Header (dark bar) ──────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #1a1d23;
+  flex-shrink: 0;
+}
+
+.app-header__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-header__plus {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.app-header__title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.app-header__burger {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+
+/* ── Hub Search Row ─────────────────────────── */
+.hub-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.hub-search-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hub-search-icon {
+  position: absolute;
+  left: 8px;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.hub-search-input {
+  width: 100%;
+  padding: 7px 10px 7px 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.hub-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hub-sort-select {
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  white-space: nowrap;
+}
+
+/* ── New Patient Row ────────────────────────── */
+.hub-new-patient-row {
+  padding: 10px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.hub-new-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ── Patient Card with Avatar ───────────────── */
+.patient-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.patient-card:hover {
+  background: var(--accent-soft);
+}
+
+.patient-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.patient-card__name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.patient-card__date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.patient-card__chevron {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* ── Tab Bar ────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-bar__tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  font-family: var(--font-ui);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tab-bar__tab.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tab-bar__tab:hover:not(.is-active) {
+  background: var(--bg);
+}
+
+.tab-bar__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── Burger Overlay ─────────────────────────── */
+.burger-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.burger-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #1a1d23;
+  flex-shrink: 0;
+}
+
+.burger-overlay__back {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.burger-overlay__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.burger-overlay__body {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.burger-setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.burger-setting-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.burger-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.burger-nav-row:hover {
+  background: var(--accent-soft);
+}
