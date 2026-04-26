@@ -49,23 +49,78 @@ export function renderFolder() {
     .map((s) => {
       const template = templates[s.template_id];
       const templateName = template ? template.name : s.template_id;
+      const scriptName =
+        (typeof s.name === "string" && s.name.trim()) ||
+        `${patient?.name || "Patient"} ${templateName}`.trim();
+      const badgeClass = templateBadgeClass(templateName);
       return `
       <div class="session-card" data-session-id="${s.id}">
-        <div class="session-card__left">
-          <span class="session-card__template">${templateName}</span>
-          <span class="session-card__date">Saved ${formatDate(s.last_saved)}</span>
+        <div class="session-card__row">
+          <div class="session-card__meta">
+            <span class="session-card__template" data-role="script-name">${escapeHtml(
+              scriptName,
+            )}</span>
+            <span class="template-badge ${badgeClass}">${escapeHtml(
+              templateName,
+            )}</span>
+            <span class="session-card__date">${formatDateTime(s.last_saved)}</span>
+          </div>
+          <button class="session-menu-btn" type="button" title="Menu" data-role="menu-btn">⋮</button>
         </div>
-        <span style="color: var(--text-muted); font-size: 14px;">→</span>
+        <div class="session-menu" data-role="menu">
+          <button class="session-menu__item" type="button" data-role="rename">Rename</button>
+          <div class="session-menu__divider"></div>
+          <button class="session-menu__item session-menu__item--danger" type="button" data-role="delete">Delete Script</button>
+        </div>
       </div>
     `;
     })
     .join("");
 
+  // Card interactions
   list.querySelectorAll(".session-card").forEach((card) => {
-    card.addEventListener("click", () => {
+    const menuBtn = card.querySelector('[data-role="menu-btn"]');
+    const menu = card.querySelector('[data-role="menu"]');
+
+    // Open session on card click (but not when interacting with menu)
+    card.addEventListener("click", (e) => {
+      if (e.target.closest('[data-role="menu-btn"]')) return;
+      if (e.target.closest('[data-role="menu"]')) return;
       loadSession(card.dataset.sessionId);
     });
+
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Close any other open menus
+      list
+        .querySelectorAll(".session-menu.is-open")
+        .forEach((m) => m.classList.remove("is-open"));
+      menu.classList.toggle("is-open");
+    });
+
+    card.querySelector('[data-role="rename"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.remove("is-open");
+      beginInlineRename(card.dataset.sessionId, card);
+    });
+
+    card.querySelector('[data-role="delete"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.remove("is-open");
+      confirmDeleteScript(card.dataset.sessionId);
+    });
   });
+
+  // Click outside closes any open menu
+  document.addEventListener(
+    "click",
+    () => {
+      list
+        .querySelectorAll(".session-menu.is-open")
+        .forEach((m) => m.classList.remove("is-open"));
+    },
+    { once: true },
+  );
 }
 
 // ── Folder Event Bindings ──
@@ -96,6 +151,118 @@ export function bindFolderEvents() {
 function formatDate(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatDateTime(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function templateBadgeClass(templateName) {
+  const n = String(templateName || "").toLowerCase();
+  if (n.includes("device")) return "template-badge--device";
+  if (n.includes("wc")) return "template-badge--wc";
+  if (n.includes("sx")) return "template-badge--sx";
+  return "template-badge--device";
+}
+
+function beginInlineRename(sessionId, card) {
+  const sessions = getSessions();
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  const nameEl = card.querySelector('[data-role="script-name"]');
+  if (!nameEl) return;
+
+  const current = (session.name || nameEl.textContent || "").trim();
+  const input = document.createElement("input");
+  input.className = "patient-input";
+  input.type = "text";
+  input.value = current;
+  input.autocomplete = "off";
+
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.gap = "6px";
+  actions.style.marginTop = "6px";
+
+  const btnSave = document.createElement("button");
+  btnSave.className = "btn btn--primary";
+  btnSave.type = "button";
+  btnSave.textContent = "Save";
+
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "btn btn--secondary";
+  btnCancel.type = "button";
+  btnCancel.textContent = "Cancel";
+
+  actions.appendChild(btnSave);
+  actions.appendChild(btnCancel);
+
+  const meta = card.querySelector(".session-card__meta");
+  const originalHtml = meta.innerHTML;
+
+  // Replace name with input + actions (keep badge/date below)
+  nameEl.replaceWith(input);
+  meta.insertBefore(actions, meta.children[1] || null);
+  input.focus();
+  input.select();
+
+  const cancel = () => {
+    meta.innerHTML = originalHtml;
+    // Re-render to re-bind events cleanly
+    renderFolder();
+  };
+
+  btnCancel.addEventListener("click", (e) => {
+    e.stopPropagation();
+    cancel();
+  });
+
+  btnSave.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const next = input.value.trim();
+    if (!next) return;
+    const updated = { ...getSessions() };
+    updated[sessionId] = { ...session, name: next };
+    setSessions(updated);
+    saveToStorage({ sessions: updated }, () => {
+      renderFolder();
+    });
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") btnSave.click();
+    if (e.key === "Escape") cancel();
+  });
+}
+
+function confirmDeleteScript(sessionId) {
+  const sessions = getSessions();
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  const name = session.name || "this script";
+
+  showConfirmStrip(
+    "patient-confirm-strip",
+    `Delete "${name}"? This cannot be undone.`,
+    () => {
+      const updated = { ...getSessions() };
+      delete updated[sessionId];
+      setSessions(updated);
+      saveToStorage({ sessions: updated }, () => {
+        setActiveSessionId(null);
+        renderFolder();
+      });
+    },
+    "Yes, Delete",
+  );
 }
 
 // ── Delete Patient ───────────────────────────────────────────────────────────

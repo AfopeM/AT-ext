@@ -1,5 +1,4 @@
 import {
-  deleteSession,
   getActivePatientId,
   getActiveSessionId,
   getActiveTemplateId,
@@ -21,7 +20,6 @@ import {
   setSession,
   setSessions,
 } from "../../shared/state.js";
-import { showConfirmStrip } from "../../shared/ui.js";
 import { saveToStorage } from "../../shared/storage.js";
 import { showView } from "../../shared/views.js";
 import { renderFolder } from "../folder/folder.js";
@@ -99,7 +97,6 @@ export function loadSession(sessionId) {
   });
 
   document.getElementById("script-canvas").innerHTML = session.canvas_html;
-  document.getElementById("btn-delete-session").style.display = "inline-block";
 
   showView("workspace");
 }
@@ -116,10 +113,22 @@ export function saveSession() {
   const canvasHtml = document.getElementById("script-canvas").innerHTML;
   const now = new Date().toISOString();
 
+  const template = getTemplate(templateId);
+  const patient = getPatient(patientId) || getPendingPatient();
+  const patientName =
+    patient?.name || document.getElementById("patient-name-input")?.value || "";
+  const templateName = template?.name || templateId;
+
+  const defaultName = `${patientName} ${templateName}`.trim();
+  const existingName = getActiveSessionId()
+    ? getSession(sessionId)?.name
+    : null;
+
   const session = {
     id: sessionId,
     patient_id: patientId,
     template_id: templateId,
+    name: existingName || defaultName,
     pill_values: { ...getPillValues() },
     canvas_html: canvasHtml,
     last_saved: now,
@@ -158,33 +167,4 @@ function showSavedFeedback() {
     btn.textContent = original;
     btn.disabled = false;
   }, 800);
-}
-
-// ── Delete Session ───────────────────────────────────────────────────────────
-export function handleDeleteSession() {
-  const sessionId = getActiveSessionId();
-  if (!sessionId) return;
-
-  showConfirmStrip(
-    "session-confirm-strip",
-    "Delete this session? This cannot be undone.",
-    () => {
-      deleteSession(sessionId);
-
-      // Write to storage, then navigate to folder
-      saveToStorage({ sessions: getSessions() }, () => {
-        setActiveSessionId(null);
-        document.getElementById("btn-delete-session").style.display = "none";
-        renderFolder();
-        showView("folder");
-      });
-    },
-  );
-}
-
-// ── Bind Delete Session Button ───────────────────────────────────────────────
-export function bindDeleteSessionEvent() {
-  document
-    .getElementById("btn-delete-session")
-    .addEventListener("click", handleDeleteSession);
 }

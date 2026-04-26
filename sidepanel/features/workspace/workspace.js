@@ -39,7 +39,6 @@ export function activateTemplate(templateId) {
   document.getElementById("template-select").disabled = false;
   setPillValues({});
   document.getElementById("patient-name-input").value = "";
-  document.getElementById("btn-delete-session").style.display = "none";
 
   renderPillGrid(template.pills);
   renderCanvas(template);

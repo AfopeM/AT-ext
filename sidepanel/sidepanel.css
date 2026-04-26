@@ -371,6 +371,7 @@ body {
   cursor: pointer;
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
+  position: relative;
 }
 
 .session-card:hover {
@@ -392,6 +393,94 @@ body {
 .session-card__date {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.session-card__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.session-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.template-badge--device {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.template-badge--wc {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.template-badge--sx {
+  background: #ede9fe;
+  color: #4c1d95;
+}
+
+.session-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.session-menu {
+  position: absolute;
+  right: 14px;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 140px;
+  z-index: 50;
+  display: none;
+}
+
+.session-menu.is-open {
+  display: block;
+}
+
+.session-menu__item {
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.session-menu__item:hover {
+  background: var(--accent-soft);
+}
+
+.session-menu__item--danger {
+  color: #dc2626;
+}
+
+.session-menu__divider {
+  height: 1px;
+  background: #f0f0f0;
 }
 
 .session-list__empty {
