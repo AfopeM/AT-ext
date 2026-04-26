@@ -5,7 +5,6 @@ import {
   setActiveTemplateId,
   setPillValues,
 } from "../../shared/state.js";
-import { updateBreadcrumb } from "../../shared/views.js";
 import { renderCanvas, updateTokens } from "./canvas.js";
 import { enterEditorMode, exitEditorMode } from "../editor/templateEditor.js";
 
@@ -44,7 +43,6 @@ export function activateTemplate(templateId) {
 
   renderPillGrid(template.pills);
   renderCanvas(template);
-  updateBreadcrumb("workspace");
 }
 
 // ── Render Pill Grid ──
