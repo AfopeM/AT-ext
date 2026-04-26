@@ -134,6 +134,8 @@ body {
   flex-shrink: 0;
 }
 
+/* (Removed) Workspace Variables header inline styles */
+
 .pill-cell {
   display: flex;
   flex-direction: column;

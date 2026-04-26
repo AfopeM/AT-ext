@@ -10,11 +10,6 @@ import {
   populateTemplateDropdown,
   bindTopBarEvents,
 } from "./features/workspace/workspace.js";
-import {
-  saveTemplate,
-  resetToDefault,
-  deleteTemplate,
-} from "./features/editor/templateEditor.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadTemplates(() => {
@@ -39,15 +34,6 @@ function bindFooterEvents() {
   if (saveBtn) {
     saveBtn.addEventListener("click", saveSession);
   }
-  document
-    .getElementById("btn-save-template")
-    .addEventListener("click", saveTemplate);
-  document
-    .getElementById("btn-reset-default")
-    .addEventListener("click", resetToDefault);
-  document
-    .getElementById("btn-delete-template")
-    .addEventListener("click", deleteTemplate);
 }
 
 function bindWorkspaceBack() {

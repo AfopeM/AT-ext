@@ -39,15 +39,21 @@ export function enterEditorMode() {
   const canvas = document.getElementById("script-canvas");
   canvas.textContent = template.script_text;
 
-  document.getElementById("btn-save").style.display = "none";
-  document.getElementById("btn-download").style.display = "none";
-  document.getElementById("btn-save-template").style.display = "inline-block";
-  document.getElementById("template-select").disabled = true;
+  const btnSave = document.getElementById("btn-save");
+  const btnDownload = document.getElementById("btn-download");
+  const btnSaveTemplate = document.getElementById("btn-save-template");
+  const templateSelect = document.getElementById("template-select");
+  if (btnSave) btnSave.style.display = "none";
+  if (btnDownload) btnDownload.style.display = "none";
+  if (btnSaveTemplate) btnSaveTemplate.style.display = "inline-block";
+  if (templateSelect) templateSelect.disabled = true;
 
   // Show editor-only buttons; Reset only appears for default templates
-  document.getElementById("btn-delete-template").style.display = "inline-block";
-  document.getElementById("btn-reset-default").style.display =
-    template.isDefault ? "inline-block" : "none";
+  const btnDeleteTemplate = document.getElementById("btn-delete-template");
+  const btnResetDefault = document.getElementById("btn-reset-default");
+  if (btnDeleteTemplate) btnDeleteTemplate.style.display = "inline-block";
+  if (btnResetDefault)
+    btnResetDefault.style.display = template.isDefault ? "inline-block" : "none";
 }
 
 // ── Exit Editor Mode ─────────────────────────────────────────────────────────
@@ -61,13 +67,19 @@ export function exitEditorMode() {
   renderPillGrid(template.pills);
   renderCanvas(template);
 
-  document.getElementById("btn-save").style.display = "inline-block";
-  document.getElementById("btn-download").style.display = "inline-block";
-  document.getElementById("btn-save-template").style.display = "none";
-  document.getElementById("template-select").disabled = false;
+  const btnSave = document.getElementById("btn-save");
+  const btnDownload = document.getElementById("btn-download");
+  const btnSaveTemplate = document.getElementById("btn-save-template");
+  const templateSelect = document.getElementById("template-select");
+  if (btnSave) btnSave.style.display = "inline-block";
+  if (btnDownload) btnDownload.style.display = "inline-block";
+  if (btnSaveTemplate) btnSaveTemplate.style.display = "none";
+  if (templateSelect) templateSelect.disabled = false;
 
-  document.getElementById("btn-delete-template").style.display = "none";
-  document.getElementById("btn-reset-default").style.display = "none";
+  const btnDeleteTemplate = document.getElementById("btn-delete-template");
+  const btnResetDefault = document.getElementById("btn-reset-default");
+  if (btnDeleteTemplate) btnDeleteTemplate.style.display = "none";
+  if (btnResetDefault) btnResetDefault.style.display = "none";
 }
 
 // ── Render Pill Manager ──────────────────────────────────────────────────────
@@ -322,8 +334,8 @@ export function deleteTemplate() {
       if (select.options.length > 0) {
         setActiveTemplateId(select.options[0].value);
         select.value = getActiveTemplateId();
-        document.getElementById("mode-select").value = "usage";
-        exitEditorMode();
+        // Editor/usage mode toggle was removed in Step 11.
+        // Template Editor will be reintroduced as a standalone view in Step 12.
       }
     });
   };

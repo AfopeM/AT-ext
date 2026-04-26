@@ -1,3 +1,5 @@
+import { getActivePatientId, getPatients, getPendingPatient } from "./state.js";
+
 export function showView(name) {
   const views = ["hub", "folder", "workspace"];
   views.forEach((v) => {
@@ -7,4 +9,16 @@ export function showView(name) {
 
   const topBar = document.getElementById("top-bar");
   if (topBar) topBar.style.display = name === "workspace" ? "flex" : "none";
+
+  if (name === "workspace") {
+    const patientId = getActivePatientId();
+    const patient =
+      getPatients()[patientId] || getPendingPatient() || { name: "Patient" };
+    const el = document.getElementById("workspace-patient-name");
+    if (el) el.textContent = patient?.name || "Patient";
+
+    // Keep legacy input in sync so existing token logic works.
+    const input = document.getElementById("patient-name-input");
+    if (input) input.value = patient?.name || "";
+  }
 }

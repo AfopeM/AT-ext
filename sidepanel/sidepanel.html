@@ -9,16 +9,10 @@
   <body>
     <!-- ROW 1: Top Bar -->
     <header class="top-bar" id="top-bar">
-      <select id="mode-select" class="bar-control">
-        <option value="usage">Usage Mode</option>
-        <option value="editor">Template Editor</option>
-      </select>
-
       <select id="template-select" class="bar-control">
         <option>Loading templates…</option>
       </select>
-
-      <button class="bar-icon" title="Settings">⚙</button>
+      <button class="bar-icon" title="Settings" type="button">⚙</button>
     </header>
 
     <!-- VIEW: Hub -->
@@ -28,9 +22,6 @@
     >
       <!-- Dark App Header -->
       <div class="app-header">
-        <div class="app-header__logo">
-          <span class="app-header__plus">+</span>
-        </div>
         <span class="app-header__title">Advanced Therapeutics</span>
         <button class="app-header__burger" id="btn-burger" title="Menu">
           &#9776;
@@ -125,7 +116,9 @@
         >
           &#8249;
         </button>
-        <span id="folder-patient-name" class="app-header__title">Patient Name</span>
+        <span id="folder-patient-name" class="app-header__title"
+          >Patient Name</span
+        >
       </div>
 
       <div id="patient-confirm-strip" class="confirm-strip"></div>
@@ -135,7 +128,10 @@
 
       <!-- Full-width New Script Button -->
       <div class="folder-new-script-row">
-        <button id="btn-new-script" class="btn btn--primary folder-new-script-btn">
+        <button
+          id="btn-new-script"
+          class="btn btn--primary folder-new-script-btn"
+        >
           + New Script
         </button>
       </div>
@@ -161,10 +157,12 @@
         >
           &#8249;
         </button>
-        <span id="workspace-patient-name" class="app-header__title">Patient</span>
+        <span id="workspace-patient-name" class="app-header__title"
+          >Patient</span
+        >
       </div>
 
-      <!-- ROW 2: Patient Name — this creates the session -->
+      <!-- ROW 2: Patient Name — used by session creation + token updates -->
       <div class="patient-row">
         <label class="patient-label" for="patient-name-input"
           >Patient Full Name</label
@@ -178,7 +176,7 @@
         />
       </div>
 
-      <!-- ROW 2.5: Session status (shown once a patient name is entered) -->
+      <!-- ROW 2.5: Session status (shown once a session is active) -->
       <div class="session-bar" id="session-bar" style="display: none">
         <span class="session-bar__label">Session:</span>
         <span class="session-bar__id" id="session-id-display">—</span>
@@ -200,27 +198,6 @@
       <footer class="footer">
         <div style="display: flex; gap: 6px">
           <button id="btn-save" class="btn btn--secondary">Save Session</button>
-          <button
-            id="btn-save-template"
-            class="btn btn--primary"
-            style="display: none"
-          >
-            💾 Save Template
-          </button>
-          <button
-            id="btn-reset-default"
-            class="btn btn--secondary"
-            style="display: none"
-          >
-            ↩ Reset to Default
-          </button>
-          <button
-            id="btn-delete-template"
-            class="btn btn--danger"
-            style="display: none"
-          >
-            🗑 Delete Template
-          </button>
           <button id="btn-download" class="btn btn--primary">
             ⬇ Download .rtf
           </button>
