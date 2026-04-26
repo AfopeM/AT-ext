@@ -1,9 +1,12 @@
 import { downloadRtf } from "./features/workspace/export.js";
 import { loadTemplates, loadPatients } from "./shared/storage.js";
-import { showView, bindBreadcrumbEvents } from "./shared/views.js";
+import { showView } from "./shared/views.js";
 import { renderHub, bindHubEvents } from "./features/hub/hub.js";
-import { renderFolder, bindFolderEvents } from "./features/folder/folder.js";
-import { saveSession, bindDeleteSessionEvent } from "./features/workspace/canvas.js";
+import { bindFolderEvents } from "./features/folder/folder.js";
+import {
+  saveSession,
+  bindDeleteSessionEvent,
+} from "./features/workspace/canvas.js";
 import {
   populateTemplateDropdown,
   bindTopBarEvents,
@@ -22,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
       bindTopBarEvents();
       bindHubEvents();
       bindFolderEvents();
-      bindBreadcrumbEvents(renderHub, renderFolder);
       bindDeleteSessionEvent();
       bindFooterEvents();
       showView("hub");

@@ -6,8 +6,6 @@ import {
   getPendingPatient,
   getTemplates,
 } from "./state.js";
-import { renderHub } from "../features/hub/hub.js";
-import { renderFolder } from "../features/folder/folder.js";
 
 export function showView(name) {
   const views = ["hub", "folder", "workspace"];
@@ -18,8 +16,6 @@ export function showView(name) {
 
   const topBar = document.getElementById("top-bar");
   if (topBar) topBar.style.display = name === "workspace" ? "flex" : "none";
-
-  updateBreadcrumb(name);
 }
 
 export function updateBreadcrumb(view) {
