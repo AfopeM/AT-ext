@@ -914,4 +914,11 @@ body {
 .editor-template-select option {
   background: #1a1d23;
   color: #ffffff;
-}
+}
+
+/* ── Script Section Headers (SPIEL:, TEXT TEMPLATE:, TEXT/VM:) ──────────── */
+.script-section-header {
+  font-weight: 700;
+  text-decoration: underline;
+}
+

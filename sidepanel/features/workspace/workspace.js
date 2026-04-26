@@ -76,7 +76,6 @@ export function renderPillGrid(pills) {
     cell.appendChild(input);
     grid.appendChild(cell);
   });
-
 }
 
 // ── Top Bar Event Bindings ──

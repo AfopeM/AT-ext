@@ -84,8 +84,8 @@ export function loadEditorTemplate(templateId) {
 
   renderPillManager(workingPills);
 
-  // Show raw bracket text — no rendered tokens
-  document.getElementById("editor-canvas").textContent = template.script_text;
+  // Show raw text with section headers formatted (bold + underline)
+  applyEditorFormatting(template.script_text);
 
   // Show / hide Reset button depending on whether it's a default template
   const btnReset = document.getElementById("btn-reset-default");
@@ -98,12 +98,35 @@ export function loadEditorTemplate(templateId) {
 }
 
 // ── Enter Editor View ────────────────────────────────────────────────────────
-// Public entry-point: populates the dropdown, loads the active template,
-// then calls showView('editor').
 export function enterEditorView() {
   populateEditorTemplateSelect();
   loadEditorTemplate(getActiveTemplateId());
   showView("editor");
+}
+
+// ── Apply Editor Formatting ──────────────────────────────────────────────────
+// Renders the raw script_text into the editor canvas with section headers
+// (SPIEL:, TEXT TEMPLATE:, TEXT/VM:) shown bold + underlined.
+// All other content is plain-text escaped. Saving reads canvas.textContent
+// which strips the span tags and recovers the clean script_text.
+const EDITOR_HEADER_RE = /^(SPIEL|TEXT\s+TEMPLATE|TEXT\/VM)\s*:$/i;
+
+function applyEditorFormatting(scriptText) {
+  const canvas = document.getElementById("editor-canvas");
+  const html = scriptText
+    .split("\n")
+    .map((line) => {
+      const escaped = line
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      if (EDITOR_HEADER_RE.test(line.trim())) {
+        return `<span class="script-section-header">${escaped}</span>`;
+      }
+      return escaped;
+    })
+    .join("\n");
+  canvas.innerHTML = html;
 }
 
 // ── Render Pill Manager ──────────────────────────────────────────────────────
@@ -148,10 +171,11 @@ function removePill(key) {
 
   const canvas = document.getElementById("editor-canvas");
   const escapedLabel = pill.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  canvas.textContent = canvas.textContent.replace(
+  const newText = canvas.textContent.replace(
     new RegExp(`\\[${escapedLabel}\\]`, "g"),
     "",
   );
+  applyEditorFormatting(newText);
 
   renderPillManager(workingPills);
 }
@@ -215,7 +239,8 @@ function confirmAddPill(label, key) {
   workingPills.push({ key, label });
 
   const canvas = document.getElementById("editor-canvas");
-  canvas.textContent = canvas.textContent.trimEnd() + `\n[${label}]`;
+  const newText = canvas.textContent.trimEnd() + `\n[${label}]`;
+  applyEditorFormatting(newText);
 
   renderPillManager(workingPills);
 }
@@ -282,8 +307,7 @@ export function resetToDefault() {
       });
 
       workingPills = defaultTemplate.pills.map((p) => ({ ...p }));
-      document.getElementById("editor-canvas").textContent =
-        defaultTemplate.script_text;
+      applyEditorFormatting(defaultTemplate.script_text);
 
       renderPillManager(workingPills);
 

@@ -15,6 +15,7 @@ import { saveToStorage, loadPatients } from "../../shared/storage.js";
 import { renderHub } from "../hub/hub.js";
 import { showConfirmStrip } from "../../shared/ui.js";
 import { loadSession, updateTokens } from "../workspace/canvas.js";
+import { activateTemplate } from "../workspace/workspace.js";
 
 let isEditingPatientInfo = false;
 
@@ -137,9 +138,12 @@ export function bindFolderEvents() {
   document.getElementById("btn-new-script").addEventListener("click", () => {
     const patient =
       getPatients()[getActivePatientId()] || getPendingPatient();
+    // Re-render canvas from current state so edited templates are reflected
+    activateTemplate(getActiveTemplateId());
     if (patient) {
       document.getElementById("patient-name-input").value = patient.name;
       updateTokens("patient_name", patient.name);
+      updateTokens("patient_first_name", patient.name.trim().split(" ")[0]);
     }
     showView("workspace");
   });

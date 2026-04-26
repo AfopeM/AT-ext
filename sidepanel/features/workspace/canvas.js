@@ -26,6 +26,10 @@ import { showView } from "../../shared/views.js";
 import { renderFolder } from "../folder/folder.js";
 import { renderPillGrid } from "./workspace.js";
 
+// ── Section Header Regex ──
+// Matches lines that are pure section titles: SPIEL:, TEXT TEMPLATE:, TEXT/VM:
+const SECTION_HEADER_RE = /^(SPIEL|TEXT\s+TEMPLATE|TEXT\/VM)\s*:$/i;
+
 // ── Render Canvas ──
 export function renderCanvas(template) {
   const canvas = document.getElementById("script-canvas");
@@ -34,15 +38,16 @@ export function renderCanvas(template) {
     labelToKey[pill.label.toLowerCase()] = pill.key;
   });
 
-  // Replace the literal agent name with the stored user name (fallback: 'Adam')
+  // Replace [User] token with the stored agent name (fallback: 'Adam')
   const agentName = getUserName() || "Adam";
-  const scriptWithName = template.script_text.replace(/\bAdam\b/g, agentName);
+  const scriptWithName = template.script_text.replace(/\[User\]/g, agentName);
 
   const escaped = scriptWithName
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+  // Replace [Token] brackets with pill-token spans
   const withTokens = escaped.replace(/\[([^\]]+)\]/g, (match, label) => {
     const key = labelToKey[label.toLowerCase()];
     if (key) {
@@ -51,7 +56,16 @@ export function renderCanvas(template) {
     return match;
   });
 
-  canvas.innerHTML = withTokens.replace(/\n/g, "<br>");
+  // Split by newline, wrap section header lines, rejoin with <br>
+  const lines = withTokens.split("\n").map((line) => {
+    const plain = line.replace(/<[^>]+>/g, "").trim();
+    if (SECTION_HEADER_RE.test(plain)) {
+      return `<span class="script-section-header">${line}</span>`;
+    }
+    return line;
+  });
+
+  canvas.innerHTML = lines.join("<br>");
 }
 
 // ── Update Tokens ──

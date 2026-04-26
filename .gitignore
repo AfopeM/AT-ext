@@ -13,5 +13,3 @@ dist/
 # Never commit real patient data exports or local test files
 *.txt
 test-data/
-
-templates.js
