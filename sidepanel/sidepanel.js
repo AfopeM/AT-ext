@@ -56,6 +56,7 @@ function bindWorkspaceBack() {
   const btn = document.getElementById("btn-workspace-back");
   if (!btn) return;
   btn.addEventListener("click", () => {
+    saveSession();
     // If the user never saved, the pendingPatient was never committed to
     // storage. Clear it so it doesn't bleed into the next patient's session.
     setPendingPatient(null);

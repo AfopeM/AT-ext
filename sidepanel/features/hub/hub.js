@@ -114,7 +114,6 @@ export function renderHub() {
     const menuBtn = card.querySelector('[data-role="menu-btn"]');
     const menu = card.querySelector('[data-role="menu"]');
 
-    // Navigate to folder — blocked while rename input is open or menu is clicked
     card.addEventListener("click", (e) => {
       if (e.target.closest('[data-role="menu-btn"]')) return;
       if (e.target.closest('[data-role="menu"]')) return;
@@ -151,7 +150,6 @@ export function renderHub() {
       });
   });
 
-  // Click outside → close all open menus
   document.addEventListener(
     "click",
     () => {
@@ -180,7 +178,7 @@ function beginInlineRenamePatient(patientId, card) {
   input.value = original;
   input.autocomplete = "off";
 
-  // Stop clicks on the input from reaching the card's nav handler
+  // Clicking the input must NOT trigger the card's navigation handler
   input.addEventListener("click", (e) => e.stopPropagation());
 
   nameEl.replaceWith(input);

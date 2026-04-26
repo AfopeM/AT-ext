@@ -7,13 +7,10 @@ export function showView(name) {
     if (el) el.style.display = v === name ? "flex" : "none";
   });
 
-  const topBar = document.getElementById("top-bar");
-  if (topBar) topBar.style.display = name === "workspace" ? "flex" : "none";
-
   if (name === "workspace") {
     const patientId = getActivePatientId();
-    const patient =
-      getPatients()[patientId] || getPendingPatient() || { name: "Patient" };
+    const patient = getPatients()[patientId] ||
+      getPendingPatient() || { name: "Patient" };
     const el = document.getElementById("workspace-patient-name");
     if (el) el.textContent = patient?.name || "Patient";
 

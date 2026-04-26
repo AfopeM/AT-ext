@@ -582,7 +582,6 @@ body {
   text-align: center;
 }
 
-
 /* ── App Header (dark bar) ──────────────────── */
 .app-header {
   display: flex;
@@ -921,4 +920,131 @@ body {
   font-weight: 700;
   text-decoration: underline;
 }
-
+
+/* ── Hub: Patient Card Info Column ──────────────────────────────────────── */
+.patient-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.patient-card__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-card__date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.patient-card__rename-input {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Hub: Meatball Menu ─────────────────────────────────────────────────── */
+.patient-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.patient-menu {
+  position: absolute;
+  right: 14px;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 140px;
+  z-index: 50;
+  display: none;
+}
+
+.patient-menu.is-open {
+  display: block;
+}
+
+.patient-menu__item {
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  color: var(--text);
+}
+
+.patient-menu__item:hover {
+  background: var(--accent-soft);
+}
+
+.patient-menu__item--danger {
+  color: #dc2626;
+}
+
+.patient-menu__divider {
+  height: 1px;
+  background: #f0f0f0;
+}
+
+/* ── Workspace: Script Type Row ─────────────────────────────────────────── */
+.workspace-type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.workspace-type-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* ── Workspace: Add Variable Button ─────────────────────────────────────── */
+.pill-cell--add {
+  grid-column: span 2;
+}
+
+.pill-add-btn {
+  width: 100%;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.add-pill-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  grid-column: span 2;
+}
+
+/* ── New/Highlighted Pill Token ─────────────────────────────────────────── */
+.pill-token.is-new {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px dashed #3b82f6;
+}
