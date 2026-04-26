@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bindFolderEvents();
       bindDeleteSessionEvent();
       bindFooterEvents();
+      bindWorkspaceBack();
       showView("hub");
     });
   });
@@ -49,4 +50,10 @@ function bindFooterEvents() {
   document
     .getElementById("btn-delete-template")
     .addEventListener("click", deleteTemplate);
+}
+
+function bindWorkspaceBack() {
+  const btn = document.getElementById("btn-workspace-back");
+  if (!btn) return;
+  btn.addEventListener("click", () => showView("folder"));
 }
